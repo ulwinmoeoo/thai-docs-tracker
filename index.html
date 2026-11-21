@@ -306,7 +306,7 @@ function openReq(docId){
  on("r-close",()=>$("rdlg").close());
  on("r-send",async()=>{const r=await sb.from("requests").insert({user_id:U.id,document_id:docId,doc_cat:it.cat,note:$("r-note").value.trim()});if(r.error)return m(r.error.message);fin()});
  on("r-cancel",async()=>{const r=await sb.rpc("cancel_request",{req:a.id});if(r.error)return m(r.error.message);fin()});
- on("r-pay",async()=>{if(!slipBlob)return m(L.rqNoSlip);const p=U.id+"/slips/"+a.id+".jpg";const u=await sb.storage.from("doc-photos").upload(p,slipBlob,{upsert:true,contentType:"image/jpeg"});if(u.error)return m(u.error.message);const r=await sb.rpc("submit_payment",{req:a.id,slip:p});if(r.error)return m(r.error.message);m(L.rqChecking);try{const v=await sb.functions.invoke("verify-slip",{body:{req:a.id}});m(v.data&&v.data.ok?L.rqAuto:L.rqManual)}catch(e){m(L.rqManual)}await new Promise(z=>setTimeout(z,1800));fin()});
+ on("r-pay",async()=>{if(!slipBlob)return m(L.rqNoSlip);const p=U.id+"/slips/"+a.id+".jpg";const u=await sb.storage.from("doc-photos").upload(p,slipBlob,{upsert:true,contentType:"image/jpeg"});if(u.error)return m(u.error.message);const r=await sb.rpc("submit_payment",{req:a.id,slip:p});if(r.error)return m(r.error.message);m(L.rqChecking);try{const v=await sb.functions.invoke("clever-service",{body:{req:a.id}});m(v.data&&v.data.ok?L.rqAuto:L.rqManual)}catch(e){m(L.rqManual)}await new Promise(z=>setTimeout(z,1800));fin()});
  const sf=$("r-slip");if(sf)sf.onchange=e=>{const f=e.target.files[0];if(f)imgBlob(f,b=>{slipBlob=b;m(b?f.name:L.err)})};
  $("rdlg").showModal();
 }
