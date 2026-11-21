@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thai Docs Tracker · စာရွက်စာတမ်း သတိပေး</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#f5f4ef;--card:#fff;--ink:#1b2340;--mute:#5d6480;--line:#dcdbd2;--brand:#27348b;--on:#fff;--ok:#1d7a4f;--soon:#b7650a;--late:#b3261e;--okbg:#e2f3ea;--soonbg:#fdeccf;--latebg:#fbe0dd;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12162b;--card:#1c2240;--ink:#eceefb;--mute:#a4abd0;--line:#333b66;--brand:#8e9cff;--on:#12162b;--ok:#6fd6a0;--soon:#f2b45c;--late:#ff8f86;--okbg:#17382b;--soonbg:#3f2f12;--latebg:#4a1f1c}}
+:root[data-theme="dark"]{--bg:#12162b;--card:#1c2240;--ink:#eceefb;--mute:#a4abd0;--line:#333b66;--brand:#8e9cff;--on:#12162b;--ok:#6fd6a0;--soon:#f2b45c;--late:#ff8f86;--okbg:#17382b;--soonbg:#3f2f12;--latebg:#4a1f1c}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:16px/1.6 "Figtree","Noto Sans Myanmar",system-ui,sans-serif}
+body.my{font-family:"Noto Sans Myanmar","Figtree",system-ui,sans-serif;line-height:1.9}
+main{max-width:640px;margin:0 auto;padding:16px 16px 96px}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+h1{font-size:1.35rem;margin:0;line-height:1.3}
+.sub{color:var(--mute);font-size:.9rem;margin:2px 0 0}
+button,select,input,textarea{font:inherit;color:inherit}
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card)}
+.seg button{border:0;background:none;padding:6px 12px;cursor:pointer;min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--on);font-weight:700}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.next{background:var(--brand);color:var(--on);border-radius:16px;padding:16px 18px;margin:12px 0}
+.next b{font-size:2.4rem;line-height:1.1;display:block}
+.next p{margin:2px 0 0}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;margin:0 -16px;padding-left:16px;padding-right:16px}
+.chips button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;cursor:pointer;min-height:40px;white-space:nowrap}
+.chips button[aria-pressed="true"]{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand);font-weight:700}
+.item{background:var(--card);border:1px solid var(--line);border-left-width:6px;border-radius:12px;padding:12px 14px;margin:0 0 10px;display:grid;grid-template-columns:1fr auto;gap:2px 12px}
+.item.ok{border-left-color:var(--ok)}.item.soon{border-left-color:var(--soon)}.item.late{border-left-color:var(--late)}
+.item h3{margin:0;font-size:1.02rem}
+.item .meta{color:var(--mute);font-size:.88rem;grid-column:1}
+.days{grid-column:2;grid-row:1/3;text-align:right;align-self:center;font-weight:700;line-height:1.2}
+.days span{display:block;font-size:1.6rem}
+.days small{font-weight:400;color:var(--mute)}
+.ok .days{color:var(--ok)}.soon .days{color:var(--soon)}.late .days{color:var(--late)}
+.row{grid-column:1/3;display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:none;border-radius:10px;padding:8px 14px;cursor:pointer;min-height:40px}
+.btn.pri{background:var(--brand);color:var(--on);border-color:var(--brand);font-weight:700}
+.btn.del{color:var(--late)}
+.thumb{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.empty{text-align:center;color:var(--mute);padding:32px 12px;border:1px dashed var(--line);border-radius:12px}
+.fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 4px 14px rgba(0,0,0,.25);border-radius:999px;padding:12px 22px;font-weight:700;border:0;background:var(--brand);color:var(--on);cursor:pointer;min-height:48px}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);width:min(92vw,460px);padding:18px;max-height:88vh;max-height:88dvh;overflow-y:auto}
+dialog::backdrop{background:rgba(10,14,30,.55)}
+label{display:block;font-weight:600;margin:12px 0 4px;font-size:.92rem}
+input[type=text],input[type=password],input[type=date],select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);min-height:44px}
+.hint{color:var(--mute);font-size:.85rem;margin:4px 0 0}
+.upl{display:flex;gap:8px;flex-wrap:wrap}
+.upl .btn{display:inline-flex;align-items:center;font-weight:600}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.chk{display:flex;gap:10px;align-items:center;font-weight:400;margin:10px 0}
+.chk input{width:20px;height:20px}
+.sheet-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.note{background:var(--soonbg);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:.88rem;margin-top:12px}
+.tabs{display:flex;gap:4px;margin-bottom:6px}
+.link{background:none;border:0;color:var(--brand);text-decoration:underline;cursor:pointer;padding:8px 0;min-height:40px}
+@media (prefers-reduced-motion:no-preference){.next{animation:in .4s ease-out}@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div><h1 id="t-title"></h1><p class="sub" id="t-sub"></p></div>
+    <div class="seg" role="group" aria-label="Language">
+      <button id="l-my" aria-pressed="false">မြန်မာ</button>
+      <button id="l-en" aria-pressed="true">EN</button>
+    </div>
+  </header>
+  <div id="next"></div>
+  <div class="chips" id="chips" role="group"></div>
+  <div id="list"></div>
+  <button class="link" id="open-set"></button>
+</main>
+<button class="fab" id="add"></button>
+
+<dialog id="dlg">
+  <h2 id="d-title" style="margin:0 0 4px;font-size:1.15rem"></h2>
+  <label for="f-cat" id="lb-cat"></label><select id="f-cat"></select>
+  <label for="f-name" id="lb-name"></label><input type="text" id="f-name">
+  <label for="f-date" id="lb-date"></label><input type="date" id="f-date">
+  <p class="hint" id="hint-date"></p>
+  <label for="f-rem" id="lb-rem"></label>
+  <select id="f-rem"><option value="180">180</option><option value="90">90</option><option value="30">30</option><option value="14">14</option><option value="7">7</option><option value="3">3</option></select>
+  <label for="f-note" id="lb-note"></label><textarea id="f-note" rows="2"></textarea>
+  <label id="lb-photo"></label>
+  <div class="upl"><label class="btn" for="f-cam" id="b-cam"></label><label class="btn" for="f-photo" id="b-gal"></label></div>
+  <input type="file" id="f-photo" accept="image/*" class="vh"><input type="file" id="f-cam" accept="image/*" capture="environment" class="vh">
+  <p class="hint" id="photo-msg" role="status"></p>
+  <div id="photo-prev"></div>
+  <div class="sheet-actions"><button class="btn" id="d-cancel"></button><button class="btn pri" id="d-save"></button></div>
+</dialog>
+
+<dialog id="adlg">
+  <h2 id="a-title" style="margin:0 0 4px;font-size:1.15rem"></h2>
+  <label for="a-email" id="lb-em"></label><input type="text" id="a-email" inputmode="email" autocomplete="username">
+  <label for="a-pw" id="lb-pw"></label><input type="password" id="a-pw" autocomplete="current-password">
+  <p class="hint" id="a-hint"></p>
+  <p class="hint" id="a-msg" role="alert" style="color:var(--late)"></p>
+  <div class="sheet-actions"><button class="btn" id="a-lang"></button><button class="btn" id="a-up"></button><button class="btn pri" id="a-in"></button></div>
+</dialog>
+<dialog id="cdlg">
+  <p id="c-msg" style="margin:0 0 4px;font-weight:600"></p>
+  <div class="sheet-actions"><button class="btn" id="c-no"></button><button class="btn pri" id="c-yes" style="background:var(--late);border-color:var(--late);color:#fff"></button></div>
+</dialog>
+
+<dialog id="set">
+  <h2 id="s-title" style="margin:0 0 4px;font-size:1.15rem"></h2>
+  <label class="chk"><input type="checkbox" id="s-browser"><span id="s-b"></span></label>
+  <label class="chk"><input type="checkbox" id="s-line"><span id="s-l"></span></label>
+  <input type="text" id="s-lineid" aria-label="LINE ID">
+  <label class="chk"><input type="checkbox" id="s-tg"><span id="s-t"></span></label>
+  <p class="note" id="s-note"></p>
+  <div class="sheet-actions"><button class="btn" id="s-out"></button><button class="btn pri" id="s-close"></button></div>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const T={
+en:{title:"Thai Docs Tracker",sub:"Never miss a deadline while living in Thailand",add:"+ Add document",all:"All",
+cats:{r90:"90-day report",visa:"Visa",passport:"Passport",license:"Driving license",permit:"Work permit",other:"Other"},
+next:"Next deadline",none:"Nothing added yet",empty:"No documents yet. Tap “Add document” to start.",
+left:"days left",today:"Due today",over:"days overdue",due:"Due",last:"Last report",
+newT:"Add document",editT:"Edit document",cat:"Type",name:"Name or number (optional)",date:"Expiry date",rem:"Remind me (days before)",note:"Notes",photo:"Photo of document",gal:"Choose from gallery",cam:"Take photo",err:"Could not read that file. Try a JPG or PNG photo.",
+h90:"Date of your last 90-day report. The next one is due 90 days later.",hdate:"Date shown on the stamp or card.",
+save:"Save",cancel:"Cancel",del:"Delete",edit:"Edit",done:"I reported today",delq:"Delete this document?",
+set:"Reminder settings",browser:"Show alerts in this browser",line:"Send LINE reminders",tg:"Send Telegram reminders",lineid:"Your LINE ID",
+snote:"LINE and Telegram sending needs the app’s server (not connected in this preview). Your choices are saved for when it is.",close:"Done",
+alert:"Reminder: "},
+my:{title:"Thai Docs Tracker",sub:"ထိုင်းမှာနေစဉ် ရက်စွဲမလွတ်စေရန်",add:"+ စာရွက်စာတမ်း ထည့်မည်",all:"အားလုံး",
+cats:{r90:"၉၀ ရက် အစီရင်ခံစာ",visa:"ဗီဇာ",passport:"ပတ်စပို့",license:"ယာဉ်မောင်းလိုင်စင်",permit:"အလုပ်လုပ်ခွင့်ပါမစ်",other:"အခြား"},
+next:"နောက်ဆုံးရက် အနီးဆုံး",none:"မထည့်ရသေးပါ",empty:"စာရွက်စာတမ်း မရှိသေးပါ။ “ထည့်မည်” ကိုနှိပ်ပါ။",
+left:"ရက်လိုသည်",today:"ယနေ့ ကန့်သတ်ရက်",over:"ရက် ကျော်လွန်နေပြီ",due:"ကန့်သတ်ရက်",last:"နောက်ဆုံး တင်သည့်ရက်",
+newT:"စာရွက်စာတမ်း ထည့်မည်",editT:"ပြင်မည်",cat:"အမျိုးအစား",name:"အမည် သို့မဟုတ် နံပါတ် (မဖြည့်လည်းရ)",date:"သက်တမ်းကုန်ရက်",rem:"ကြိုတင်သတိပေးမည့် ရက်အရေအတွက်",note:"မှတ်ချက်",photo:"စာရွက်စာတမ်း ဓာတ်ပုံ",gal:"ဂယ်လာရီမှ ရွေးမည်",cam:"ဓာတ်ပုံ ရိုက်မည်",err:"ဖိုင်ကို ဖတ်၍မရပါ။ JPG သို့မဟုတ် PNG ဓာတ်ပုံ ကြိုးစားပါ။",
+h90:"နောက်ဆုံး ၉၀ ရက် အစီရင်ခံခဲ့သည့်ရက်ကို ထည့်ပါ။ နောက်တစ်ကြိမ်ကို ၉၀ ရက်အကြာတွင် တွက်ပေးမည်။",hdate:"ခံဝင်တံဆိပ် သို့မဟုတ် ကတ်ပေါ်ရှိ ရက်စွဲ။",
+save:"သိမ်းမည်",cancel:"မလုပ်တော့ပါ",del:"ဖျက်မည်",edit:"ပြင်မည်",done:"ယနေ့ တင်ပြီးပါပြီ",delq:"ဤစာရွက်စာတမ်းကို ဖျက်မလား?",
+set:"သတိပေးချက် ဆက်တင်",browser:"ဤဘရောက်ဇာတွင် သတိပေးမည်",line:"LINE ဖြင့် သတိပေးမည်",tg:"Telegram ဖြင့် သတိပေးမည်",lineid:"သင့် LINE ID",
+snote:"LINE နှင့် Telegram ပို့ရန် အက်ပ်၏ ဆာဗာ လိုအပ်ပါသည် (ဤဥပမာတွင် မချိတ်ရသေးပါ)။ သင့်ရွေးချယ်မှုကို သိမ်းထားပါမည်။",close:"ပြီးပြီ",
+alert:"သတိပေးချက်: "}
+};
+Object.assign(T.en,{login:"Sign in",signup:"Sign up",email:"Phone number or email",pw:"Password (8+ characters)",logout:"Log out",err2:"Could not save.",pwErr:"Enter a valid phone number (or email) and a password of 8+ characters.",confirm:"Check your email to confirm your account, then sign in.",lng:"မြန်မာ",hint:"Example: 0812345678 (Thai number) or +959xxxxxxxxx (Myanmar number)"});
+Object.assign(T.my,{login:"ဝင်မည်",signup:"အကောင့်ဖွင့်မည်",email:"ဖုန်းနံပါတ် သို့မဟုတ် အီးမေးလ်",pw:"စကားဝှက် (၈ လုံးနှင့်အထက်)",logout:"ထွက်မည်",err2:"သိမ်း၍မရပါ။",pwErr:"ဖုန်းနံပါတ် (သို့) အီးမေးလ် မှန်ကန်စွာ ထည့်ပြီး စကားဝှက် ၈ လုံးနှင့်အထက် ထည့်ပါ။",confirm:"အီးမေးလ်ကို စစ်ပြီး အကောင့်ကို အတည်ပြုပါ၊ ထို့နောက် ဝင်ပါ။",lng:"English",hint:"ဥပမာ - 0812345678 (ထိုင်းနံပါတ်) သို့မဟုတ် +959xxxxxxxxx (မြန်မာနံပါတ်)"});
+const ORDER=["r90","visa","passport","license","permit","other"];
+let S={lang:"en",filter:"all",items:[],set:{browser:false,line:false,lineid:"",tg:false}},editId=null,photo=null;
+const $=id=>document.getElementById(id);
+function load(){try{const r=localStorage.getItem("thaidocs.v1");if(r){const o=JSON.parse(r);S=Object.assign(S,o)}}catch(e){}}
+function save(){try{localStorage.setItem("thaidocs.v1",JSON.stringify({lang:S.lang,filter:S.filter,set:S.set}))}catch(e){}}
+const t=()=>T[S.lang];
+const today=()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())};
+const parse=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c)};
+const fmt=d=>d.toISOString?new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10):d;
+function dueOf(it){const d=parse(it.date);if(it.cat==="r90")d.setDate(d.getDate()+90);return d}
+function left(it){return Math.round((dueOf(it)-today())/864e5)}
+function state(it){const n=left(it);return n<0?"late":n<=Number(it.rem||30)?"soon":"ok"}
+function dstr(d){return d.toLocaleDateString(S.lang==="my"?"my-MM":"en-GB",{day:"numeric",month:"short",year:"numeric"})}
+function render(){
+ const L=t();document.documentElement.lang=S.lang==="my"?"my":"en";document.body.className=S.lang==="my"?"my":"";
+ $("l-my").setAttribute("aria-pressed",S.lang==="my");$("l-en").setAttribute("aria-pressed",S.lang==="en");
+ $("t-title").textContent=L.title;$("t-sub").textContent=L.sub;$("add").textContent=L.add;$("open-set").textContent=L.set;
+ const sorted=[...S.items].sort((a,b)=>dueOf(a)-dueOf(b));
+ const nx=sorted[0];
+ $("next").innerHTML=nx?`<div class="next"><p>${L.next}</p><b>${Math.abs(left(nx))}</b><p>${esc(L.cats[nx.cat])}${nx.name?" · "+esc(nx.name):""} — ${left(nx)<0?L.over:left(nx)===0?L.today:L.left}</p></div>`:"";
+ $("chips").innerHTML=["all",...ORDER].map(k=>`<button data-k="${k}" aria-pressed="${S.filter===k}">${k==="all"?L.all:L.cats[k]}</button>`).join("");
+ const vis=sorted.filter(i=>S.filter==="all"||i.cat===S.filter);
+ $("list").innerHTML=vis.length?vis.map(card).join(""):`<div class="empty">${L.empty}</div>`;
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function card(it){
+ const L=t(),n=left(it),st=state(it),d=dueOf(it);
+ const big=n<0?-n:n,small=n<0?L.over:n===0?L.today:L.left;
+ return `<article class="item ${st}"><div><h3>${esc(L.cats[it.cat])}${it.name?" · "+esc(it.name):""}</h3></div>
+ <div class="days"><span>${n===0?"0":big}</span><small>${small}</small></div>
+ <div class="meta">${L.due}: ${dstr(d)}${it.cat==="r90"?" · "+L.last+": "+dstr(parse(it.date)):""}</div>
+ ${it.note?`<div class="meta">${esc(it.note)}</div>`:""}
+ <div class="row">${it.photo?`<img class="thumb" src="${it.photo}" alt="">`:""}
+ ${it.cat==="r90"?`<button class="btn pri" data-a="done" data-id="${it.id}">${L.done}</button>`:""}
+ <button class="btn" data-a="edit" data-id="${it.id}">${L.edit}</button>
+ <button class="btn del" data-a="del" data-id="${it.id}">${L.del}</button></div></article>`;
+}
+function labels(){const L=t();
+ $("lb-cat").textContent=L.cat;$("lb-name").textContent=L.name;$("lb-rem").textContent=L.rem;$("lb-note").textContent=L.note;$("lb-photo").textContent=L.photo;$("b-gal").textContent=L.gal;$("b-cam").textContent=L.cam;
+ $("d-cancel").textContent=L.cancel;$("d-save").textContent=L.save;
+ $("f-cat").innerHTML=ORDER.map(k=>`<option value="${k}">${L.cats[k]}</option>`).join("");
+ Array.from($("f-rem").options).forEach(o=>{const v=o.value,m=S.lang==="my";o.textContent=v==="180"?(m?"၆ လ (၁၈၀ ရက်)":"6 months (180 days)"):v==="90"?(m?"၃ လ (၉၀ ရက်)":"3 months (90 days)"):v+(m?" ရက်":" days")});
+}
+function dateLabel(){const L=t(),c=$("f-cat").value;$("lb-date").textContent=c==="r90"?L.last:L.date;$("hint-date").textContent=c==="r90"?L.h90:L.hdate}
+function openDlg(id){
+ editId=id||null;photo=null;labels();const it=S.items.find(i=>i.id===id);
+ $("d-title").textContent=it?t().editT:t().newT;
+ $("f-cat").value=it?it.cat:(S.filter!=="all"?S.filter:"r90");
+ $("f-name").value=it?it.name:"";$("f-date").value=it?it.date:fmt(today());
+ $("f-rem").value=it?it.rem:($("f-cat").value==="passport"?"180":"14");$("f-note").value=it?it.note:"";$("f-photo").value="";$("f-cam").value="";$("photo-msg").textContent="";
+ photo=it?it.photo:null;$("photo-prev").innerHTML=photo?`<img class="thumb" src="${photo}" alt="" style="margin-top:8px">`:"";
+ dateLabel();$("dlg").showModal();
+}
+$("add").onclick=()=>openDlg();
+$("f-cat").onchange=()=>{dateLabel();const c=$("f-cat").value,r=$("f-rem");if(c==="passport")r.value="180";else if(Number(r.value)>30)r.value="14"};
+$("d-cancel").onclick=()=>$("dlg").close();
+$("d-save").onclick=async()=>{
+ if(!$("f-date").value)return $("f-date").focus();
+ const id=editId||crypto.randomUUID();let pp=(S.items.find(i=>i.id===editId)||{}).photo_path||null;
+ try{
+  if(photo&&photo.startsWith("data:")){const b=await(await fetch(photo)).blob();pp=U.id+"/"+id+".jpg";const r=await sb.storage.from("doc-photos").upload(pp,b,{upsert:true,contentType:"image/jpeg"});if(r.error)throw r.error}
+  if(!photo)pp=null;
+  const row={id,user_id:U.id,cat:$("f-cat").value,name:$("f-name").value.trim(),date:$("f-date").value,rem:Number($("f-rem").value),note:$("f-note").value.trim(),photo_path:pp};
+  const r=await sb.from("documents").upsert(row);if(r.error)throw r.error;
+ }catch(e){$("photo-msg").textContent=t().err2+" "+(e.message||"");return}
+ await loadDocs();$("dlg").close();render();
+};
+function pick(e){
+ const f=e.target.files[0];if(!f)return;$("photo-msg").textContent="";const r=new FileReader();
+ r.onload=()=>{const im=new Image();im.onload=()=>{const m=720,k=Math.min(1,m/Math.max(im.width,im.height));
+  const c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+  photo=c.toDataURL("image/jpeg",.6);$("photo-prev").innerHTML=`<img class="thumb" src="${photo}" alt="" style="margin-top:8px">`};im.onerror=()=>{$("photo-msg").textContent=t().err};im.src=r.result};
+ r.onerror=()=>{$("photo-msg").textContent=t().err};r.readAsDataURL(f);
+}
+$("f-photo").onchange=pick;$("f-cam").onchange=pick;
+document.addEventListener("click",e=>{
+ const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.k){S.filter=b.dataset.k;save();render()}
+ if(b.dataset.a==="edit")openDlg(b.dataset.id);
+ if(b.dataset.a==="del"){delId=b.dataset.id;$("c-msg").textContent=t().delq;$("c-yes").textContent=t().del;$("c-no").textContent=t().cancel;$("cdlg").showModal()}
+ if(b.dataset.a==="done"){sb.from("documents").update({date:fmt(today())}).eq("id",b.dataset.id).then(async()=>{await loadDocs();render()})}
+});
+let delId=null;
+$("c-yes").onclick=async()=>{const it=S.items.find(i=>i.id===delId);if(it&&it.photo_path)await sb.storage.from("doc-photos").remove([it.photo_path]);await sb.from("documents").delete().eq("id",delId);await loadDocs();$("cdlg").close();render()};
+$("c-no").onclick=()=>$("cdlg").close();
+$("l-my").onclick=()=>{S.lang="my";save();render()};
+$("l-en").onclick=()=>{S.lang="en";save();render()};
+function setLabels(){const L=t();$("s-title").textContent=L.set;$("s-b").textContent=L.browser;$("s-l").textContent=L.line;$("s-t").textContent=L.tg;$("s-note").textContent=L.snote;$("s-close").textContent=L.close;$("s-out").textContent=L.logout;$("s-lineid").placeholder=L.lineid}
+$("open-set").onclick=()=>{setLabels();$("s-browser").checked=S.set.browser;$("s-line").checked=S.set.line;$("s-lineid").value=S.set.lineid;$("s-tg").checked=S.set.tg;$("set").showModal()};
+$("s-close").onclick=()=>{
+ S.set={browser:$("s-browser").checked,line:$("s-line").checked,lineid:$("s-lineid").value.trim(),tg:$("s-tg").checked};save();$("set").close();
+ if(S.set.browser&&"Notification"in window&&Notification.permission==="default")Notification.requestPermission();
+};
+function notifyDue(){
+ if(!S.set.browser||!("Notification"in window)||Notification.permission!=="granted")return;
+ S.items.filter(i=>state(i)!=="ok").forEach(i=>{try{new Notification(t().alert+t().cats[i.cat],{body:left(i)<0?(-left(i))+" "+t().over:left(i)+" "+t().left})}catch(e){}});
+}
+const sb=supabase.createClient("https://ydtymoiodzvcxtdolsrq.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkdHltb2lvZHp2Y3h0ZG9sc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyNTU1MzIsImV4cCI6MjExMDgzMTUzMn0.mAzHbbDkBE8TCyOmzkvNdrSYY6rn0ktA5LCEvNH5jRM");let U=null;
+async function loadDocs(){const r=await sb.from("documents").select("*").order("date");
+ S.items=await Promise.all((r.data||[]).map(async d=>{let ph=null;if(d.photo_path){const g=await sb.storage.from("doc-photos").createSignedUrl(d.photo_path,3600);ph=g.data?g.data.signedUrl:null}
+  return{id:d.id,cat:d.cat,name:d.name||"",date:d.date,rem:d.rem,note:d.note||"",photo:ph,photo_path:d.photo_path}}))}
+function authLabels(){const L=t();$("a-title").textContent=L.login;$("a-in").textContent=L.login;$("a-up").textContent=L.signup;$("lb-em").textContent=L.email;$("lb-pw").textContent=L.pw;$("a-lang").textContent=L.lng;$("a-hint").textContent=L.hint}
+function showAuth(){authLabels();if(!$("adlg").open)$("adlg").showModal()}
+async function start(){const{data}=await sb.auth.getSession();if(!data.session){render();return showAuth()}
+ U=data.session.user;sb.from("profiles").update({name:disp(U.email),lang:S.lang==="my"?"my":"en",last_active:new Date().toISOString()}).eq("id",U.id).then(()=>{});
+ await loadDocs();render();notifyDue()}
+function toEmail(v){v=v.trim();if(v.includes("@"))return v.toLowerCase();let d=v.replace(/\D/g,"");if(!d)return"";if(!v.startsWith("+")){if(d.startsWith("00"))d=d.slice(2);else if(d.startsWith("0"))d="66"+d.slice(1)}return d.length>=9&&d.length<=15?"p"+d+"@phone.thaidocs.app":""}
+function disp(e){const m=/^p(\d+)@phone\.thaidocs\.app$/.exec(e||"");return m?"+"+m[1]:e}
+async function doAuth(up){const em=toEmail($("a-email").value),pw=$("a-pw").value,m=$("a-msg");m.textContent="";
+ if(!em||pw.length<8){m.textContent=t().pwErr;return}
+ const r=up?await sb.auth.signUp({email:em,password:pw}):await sb.auth.signInWithPassword({email:em,password:pw});
+ if(r.error){m.textContent=r.error.message;return}
+ if(!r.data.session){m.textContent=t().confirm;return}
+ $("adlg").close();start()}
+$("adlg").addEventListener("cancel",e=>e.preventDefault());
+$("a-in").onclick=()=>doAuth(false);$("a-up").onclick=()=>doAuth(true);
+$("a-lang").onclick=()=>{S.lang=S.lang==="my"?"en":"my";save();authLabels();render()};
+$("s-out").onclick=async()=>{await sb.auth.signOut();location.reload()};
+load();S.items=[];render();start();
+</script>
+</body>
+</html>
