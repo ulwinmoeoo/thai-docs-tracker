@@ -49,6 +49,11 @@ th{color:var(--mute);font-weight:600;font-size:.82rem}
 .pill.ok{background:var(--okbg);color:var(--ok)}.pill.soon{background:var(--soonbg);color:var(--soon)}.pill.late{background:var(--latebg);color:var(--late)}.pill.off{background:var(--line);color:var(--mute)}
 .row-top{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
 .row-top input{flex:1;min-width:160px}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);width:min(92vw,480px);max-height:88vh;max-height:88dvh;overflow-y:auto;padding:18px}
+dialog::backdrop{background:rgba(10,14,30,.55)}
+.f{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);min-height:44px;font:inherit;color:inherit}
+.slip{max-width:100%;border-radius:10px;border:1px solid var(--line)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}
 </style>
 </head>
 <body>
@@ -80,12 +85,55 @@ async function gate(){
  showDash();
 }
 async function out(){await sb.auth.signOut();showLogin()}
+let reqs=[];
+const ST={requested:"New request",quoted:"Waiting for payment",payment_submitted:"Check payment",confirmed:"Paid, start work",in_progress:"In progress",done:"Done",cancelled:"Cancelled"};
+const pc=s=>s==="done"?"ok":s==="cancelled"?"off":s==="payment_submitted"||s==="requested"?"late":"soon";
+function reqRows(){
+ const nm=id=>(users.find(u=>u.id===id)||{}).name||"";
+ $("#rb").innerHTML=reqs.map(r=>`<tr><td>${esc(nm(r.user_id))}</td><td>${esc(TYPES[r.doc_cat]||"")}</td><td><span class="pill ${pc(r.status)}">${ST[r.status]}</span></td><td>${r.price!=null?esc(r.price):"–"}</td><td>${new Date(r.created_at).toLocaleDateString()}</td><td><button class="btn" data-r="${r.id}">Open</button></td></tr>`).join("")||'<tr><td colspan="6" class="mute">No requests yet.</td></tr>';
+ document.querySelectorAll("#rb button").forEach(b=>b.onclick=()=>openReq(b.dataset.r));
+}
+async function upd(id,patch){const r=await sb.from("requests").update(Object.assign({updated_at:new Date().toISOString()},patch)).eq("id",id);if(r.error){$("#qm").textContent=r.error.message;return false}return true}
+async function openReq(id){
+ const r=reqs.find(x=>x.id===id),u=users.find(x=>x.id===r.user_id)||{name:""};
+ const d=r.document_id?(await sb.from("documents").select("name,date,photo_path").eq("id",r.document_id).maybeSingle()).data:null;
+ let img="",slip="";
+ if(d&&d.photo_path){const g=await sb.storage.from("doc-photos").createSignedUrl(d.photo_path,3600);if(g.data)img=`<p class="mute">Document photo</p><img class="slip" src="${g.data.signedUrl}" alt="">`}
+ if(r.slip_path){const g=await sb.storage.from("doc-photos").createSignedUrl(r.slip_path,3600);if(g.data)slip=`<p class="mute">Payment slip</p><img class="slip" src="${g.data.signedUrl}" alt="">`}
+ const s=r.status;
+ let h=`<h2 style="margin:0 0 6px;font-size:1.15rem">${esc(TYPES[r.doc_cat]||"")} · ${esc(u.name)}</h2><p><span class="pill ${pc(s)}">${ST[s]}</span></p>`;
+ if(d)h+=`<p class="mute">Number or name: ${esc(d.name||"–")} · Current date: ${esc(d.date)}</p>`;
+ if(r.note)h+=`<p>User note: ${esc(r.note)}</p>`;
+ h+=img+slip;
+ let a="";
+ if(s==="requested"||s==="quoted"){
+  h+=`<label for="qp">Price (THB)</label><input class="f" type="number" id="qp" value="${r.price!=null?esc(r.price):""}"><label for="qi">How to pay (bank or PromptPay)</label><textarea class="f" id="qi" rows="3">${esc(r.pay_info||"")}</textarea><label for="qn">Note to user</label><input class="f" type="text" id="qn" value="${esc(r.admin_note||"")}">`;
+  a+=`<button class="btn pri" data-act="quote">${s==="quoted"?"Update quote":"Send quote"}</button>`}
+ if(s==="payment_submitted")a+=`<button class="btn" data-act="reject">Reject slip</button><button class="btn pri" data-act="confirm">Confirm payment</button>`;
+ if(s==="confirmed")a+=`<button class="btn pri" data-act="start">Start processing</button>`;
+ if(s==="in_progress"){h+=`<label for="qd2">New date (expiry date, or last report date for 90-day report)</label><input class="f" type="date" id="qd2">`;a+=`<button class="btn pri" data-act="done">Complete and update document</button>`}
+ if(s!=="done"&&s!=="cancelled")a+=`<button class="btn" data-act="cancel" style="color:var(--late)">Cancel request</button>`;
+ $("#qd").innerHTML=h+`<p class="err" id="qm" role="alert"></p><div class="acts">`+a+`<button class="btn" data-act="close">Close</button></div>`;
+ $("#qd").querySelectorAll("[data-act]").forEach(b=>b.onclick=async()=>{
+  const k=b.dataset.act;let ok=true;
+  if(k==="close")return $("#qd").close();
+  if(k==="quote"){const p=$("#qp").value;if(p===""){$("#qm").textContent="Enter a price.";return}ok=await upd(id,{status:"quoted",price:Number(p),pay_info:$("#qi").value.trim(),admin_note:$("#qn").value.trim()})}
+  if(k==="reject")ok=await upd(id,{status:"quoted",slip_path:null,admin_note:"Payment slip rejected. Please send a clear slip."});
+  if(k==="confirm")ok=await upd(id,{status:"confirmed"});
+  if(k==="start")ok=await upd(id,{status:"in_progress"});
+  if(k==="cancel")ok=await upd(id,{status:"cancelled"});
+  if(k==="done"){const dt=$("#qd2").value;if(!dt){$("#qm").textContent="Choose the new date.";return}const x=await sb.rpc("admin_complete_request",{req:id,new_d:dt});if(x.error){$("#qm").textContent=x.error.message;ok=false}}
+  if(ok){$("#qd").close();showDash()}
+ });
+ $("#qd").showModal();
+}
+
 async function showDash(){
  $("#app").innerHTML='<div class="wrap"><p class="mute">Loading…</p></div>';
- const[s,p,d]=await Promise.all([sb.rpc("admin_stats"),sb.from("profiles").select("*").order("last_active",{ascending:false}),sb.from("documents").select("user_id,cat,date")]);
+ const[s,p,d,rq]=await Promise.all([sb.rpc("admin_stats"),sb.from("profiles").select("*").order("last_active",{ascending:false}),sb.from("documents").select("user_id,cat,date"),sb.from("requests").select("*").order("created_at",{ascending:false})]);
  const bad=s.error||p.error||d.error;
  if(bad){$("#app").innerHTML=`<div class="wrap"><p class="err">${esc(bad.message)}</p><button class="btn" id="lo">Log out</button></div>`;$("#lo").onclick=out;return}
- const now=Date.now();
+ const now=Date.now();reqs=rq.error?[]:rq.data;
  users=p.data.map(u=>{const my=d.data.filter(x=>x.user_id===u.id);
   return{id:u.id,name:u.name||"(no name yet)",lang:u.lang==="my"?"Myanmar":"English",docs:my.length,nextDue:my.length?Math.min(...my.map(due)):null,active:Math.floor((now-new Date(u.last_active))/DAY),joined:Math.floor((now-new Date(u.created_at))/DAY),off:u.suspended}});
  const t=s.data,bt=t.by_type||{},types=Object.keys(TYPES).map(k=>[TYPES[k],bt[k]||0]),mx=Math.max(1,...types.map(x=>x[1]));
@@ -98,14 +146,17 @@ async function showDash(){
   <div class="stat"><b>${t.active_7d}</b><span>Active, last 7 days</span></div>
   <div class="stat"><b>${t.new_30d}</b><span>New, last 30 days</span></div>
   <div class="stat"><b>${t.documents}</b><span>Documents tracked</span></div>
-  <div class="stat"><b>${t.overdue_users}</b><span>Users with overdue item</span></div></div>
+  <div class="stat"><b>${t.overdue_users}</b><span>Users with overdue item</span></div>
+  <div class="stat"><b>${reqs.filter(r=>r.status==="requested"||r.status==="payment_submitted").length}</b><span>Requests needing action</span></div></div>
  <div class="grid2">
   <div class="panel"><h2>Documents by type</h2>${types.map(([n,c])=>`<div class="bar"><span>${n}</span><i style="width:${Math.max(4,c/mx*100)}%"></i><b>${c}</b></div>`).join("")}</div>
   <div class="panel"><h2>New users per week (last 8)</h2><div class="wk">${wk.map((n,i)=>`<div><i style="height:${Math.max(3,n/wm*84)}px"></i>${n}<br>W${i+1}</div>`).join("")}</div></div></div>
+ <div class="panel" style="margin-bottom:14px"><h2>Renewal requests</h2><div class="scroll"><table><thead><tr><th>User</th><th>Document</th><th>Status</th><th>Price</th><th>Date</th><th></th></tr></thead><tbody id="rb"></tbody></table></div></div>
+ <dialog id="qd"></dialog>
  <div class="panel"><h2>Users</h2>
   <div class="row-top"><input type="search" id="sq" placeholder="Search email" aria-label="Search users" value="${esc(q)}"><span class="mute" id="cnt"></span></div>
   <div class="scroll"><table><thead><tr><th>User</th><th>Language</th><th>Docs</th><th>Next deadline</th><th>Last active</th><th>Status</th><th></th></tr></thead><tbody id="tb"></tbody></table></div></div></div>`;
- $("#lo").onclick=out;$("#sq").oninput=e=>{q=e.target.value;rows()};rows();
+ $("#lo").onclick=out;$("#sq").oninput=e=>{q=e.target.value;rows()};rows();reqRows();
 }
 function rows(){
  const k=q.toLowerCase(),l=users.filter(u=>u.name.toLowerCase().includes(k));

@@ -59,6 +59,9 @@ input[type=text],input[type=password],input[type=date],select,textarea{width:100
 .tabs{display:flex;gap:4px;margin-bottom:6px}
 .link{background:none;border:0;color:var(--brand);text-decoration:underline;cursor:pointer;padding:8px 0;min-height:40px}
 @media (prefers-reduced-motion:no-preference){.next{animation:in .4s ease-out}@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}}
+.rq{font-size:.82rem;border-radius:999px;padding:2px 10px;background:var(--soonbg);color:var(--soon);font-weight:600;white-space:nowrap}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:8px 0}.kv b{color:var(--mute);font-weight:600}
+pre.pay{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;margin:6px 0}
 </style>
 </head>
 <body>
@@ -102,6 +105,11 @@ input[type=text],input[type=password],input[type=date],select,textarea{width:100
   <p class="hint" id="a-msg" role="alert" style="color:var(--late)"></p>
   <div class="sheet-actions"><button class="btn" id="a-lang"></button><button class="btn" id="a-up"></button><button class="btn pri" id="a-in"></button></div>
 </dialog>
+<dialog id="rdlg">
+  <h2 id="r-title" style="margin:0 0 8px;font-size:1.1rem"></h2>
+  <div id="r-body"></div>
+  <div class="sheet-actions" id="r-act"></div>
+</dialog>
 <dialog id="cdlg">
   <p id="c-msg" style="margin:0 0 4px;font-weight:600"></p>
   <div class="sheet-actions"><button class="btn" id="c-no"></button><button class="btn pri" id="c-yes" style="background:var(--late);border-color:var(--late);color:#fff"></button></div>
@@ -143,6 +151,8 @@ alert:"သတိပေးချက်: "}
 };
 Object.assign(T.en,{login:"Sign in",signup:"Sign up",email:"Phone number or email",pw:"Password (8+ characters)",logout:"Log out",err2:"Could not save.",pwErr:"Enter a valid phone number (or email) and a password of 8+ characters.",confirm:"Check your email to confirm your account, then sign in.",lng:"မြန်မာ",hint:"Example: 0812345678 (Thai number) or +959xxxxxxxxx (Myanmar number)"});
 Object.assign(T.my,{login:"ဝင်မည်",signup:"အကောင့်ဖွင့်မည်",email:"ဖုန်းနံပါတ် သို့မဟုတ် အီးမေးလ်",pw:"စကားဝှက် (၈ လုံးနှင့်အထက်)",logout:"ထွက်မည်",err2:"သိမ်း၍မရပါ။",pwErr:"ဖုန်းနံပါတ် (သို့) အီးမေးလ် မှန်ကန်စွာ ထည့်ပြီး စကားဝှက် ၈ လုံးနှင့်အထက် ထည့်ပါ။",confirm:"အီးမေးလ်ကို စစ်ပြီး အကောင့်ကို အတည်ပြုပါ၊ ထို့နောက် ဝင်ပါ။",lng:"English",hint:"ဥပမာ - 0812345678 (ထိုင်းနံပါတ်) သို့မဟုတ် +959xxxxxxxxx (မြန်မာနံပါတ်)"});
+Object.assign(T.en,{rq:"Request renewal",rqTitle:"Renewal request",rqNote:"Message to admin (optional)",rqSend:"Send request",st:{requested:"Waiting for price",quoted:"Payment needed",payment_submitted:"Checking payment",confirmed:"Payment confirmed",in_progress:"In progress",done:"Done",cancelled:"Cancelled"},rqPrice:"Price",rqBaht:"THB",rqPay:"How to pay",rqSlip:"Upload your payment slip",rqSlipPick:"Choose slip photo",rqSlipSend:"Send slip",rqCancel:"Cancel request",rqAdmin:"Admin note",rqWait1:"The admin is preparing a price. Please wait.",rqWait2:"Payment received. The admin is checking it.",rqWait3:"Payment confirmed. The admin will start soon.",rqWait4:"The admin is processing your request.",rqNoSlip:"Choose the slip photo first."});
+Object.assign(T.my,{rq:"သက်တမ်းတိုးရန် တောင်းဆိုမည်",rqTitle:"သက်တမ်းတိုး တောင်းဆိုမှု",rqNote:"Admin သို့ မက်ဆေ့ချ် (မဖြည့်လည်းရ)",rqSend:"တောင်းဆိုမှု ပို့မည်",st:{requested:"ဈေးနှုန်း စောင့်နေသည်",quoted:"ငွေပေးချေရန်",payment_submitted:"ငွေပေးချေမှု စစ်နေသည်",confirmed:"ငွေလက်ခံပြီး",in_progress:"ဆောင်ရွက်နေသည်",done:"ပြီးပါပြီ",cancelled:"ပယ်ဖျက်ပြီး"},rqPrice:"ကျသင့်ငွေ",rqBaht:"ဘတ်",rqPay:"ငွေပေးချေရန် အချက်အလက်",rqSlip:"ငွေလွှဲပြေစာ ဓာတ်ပုံ တင်ပါ",rqSlipPick:"ပြေစာဓာတ်ပုံ ရွေးမည်",rqSlipSend:"ပြေစာ ပို့မည်",rqCancel:"တောင်းဆိုမှု ပယ်ဖျက်မည်",rqAdmin:"Admin မှတ်ချက်",rqWait1:"Admin က ဈေးနှုန်း ပြင်ဆင်နေပါသည်။ ခဏစောင့်ပါ။",rqWait2:"ငွေပေးချေမှု လက်ခံရရှိပြီး Admin စစ်ဆေးနေပါသည်။",rqWait3:"ငွေလက်ခံပြီးပါပြီ။ Admin မကြာမီ စတင်ပါမည်။",rqWait4:"Admin က သင့်တောင်းဆိုမှုကို ဆောင်ရွက်နေပါသည်။",rqNoSlip:"ပြေစာဓာတ်ပုံ အရင်ရွေးပါ။"});
 const ORDER=["r90","visa","passport","license","permit","other"];
 let S={lang:"en",filter:"all",items:[],set:{browser:false,line:false,lineid:"",tg:false}},editId=null,photo=null;
 const $=id=>document.getElementById(id);
@@ -177,7 +187,7 @@ function card(it){
  ${it.note?`<div class="meta">${esc(it.note)}</div>`:""}
  <div class="row">${it.photo?`<img class="thumb" src="${it.photo}" alt="">`:""}
  ${it.cat==="r90"?`<button class="btn pri" data-a="done" data-id="${it.id}">${L.done}</button>`:""}
- <button class="btn" data-a="edit" data-id="${it.id}">${L.edit}</button>
+ ${rqBtn(it)}<button class="btn" data-a="edit" data-id="${it.id}">${L.edit}</button>
  <button class="btn del" data-a="del" data-id="${it.id}">${L.del}</button></div></article>`;
 }
 function labels(){const L=t();
@@ -222,6 +232,7 @@ document.addEventListener("click",e=>{
  const b=e.target.closest("button");if(!b)return;
  if(b.dataset.k){S.filter=b.dataset.k;save();render()}
  if(b.dataset.a==="edit")openDlg(b.dataset.id);
+ if(b.dataset.a==="rq")loadReqs().then(()=>openReq(b.dataset.id));
  if(b.dataset.a==="del"){delId=b.dataset.id;$("c-msg").textContent=t().delq;$("c-yes").textContent=t().del;$("c-no").textContent=t().cancel;$("cdlg").showModal()}
  if(b.dataset.a==="done"){sb.from("documents").update({date:fmt(today())}).eq("id",b.dataset.id).then(async()=>{await loadDocs();render()})}
 });
@@ -241,7 +252,7 @@ function notifyDue(){
  S.items.filter(i=>state(i)!=="ok").forEach(i=>{try{new Notification(t().alert+t().cats[i.cat],{body:left(i)<0?(-left(i))+" "+t().over:left(i)+" "+t().left})}catch(e){}});
 }
 const sb=supabase.createClient("https://ydtymoiodzvcxtdolsrq.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkdHltb2lvZHp2Y3h0ZG9sc3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyNTU1MzIsImV4cCI6MjExMDgzMTUzMn0.mAzHbbDkBE8TCyOmzkvNdrSYY6rn0ktA5LCEvNH5jRM");let U=null;
-async function loadDocs(){const r=await sb.from("documents").select("*").order("date");
+async function loadDocs(){await loadReqs();const r=await sb.from("documents").select("*").order("date");
  S.items=await Promise.all((r.data||[]).map(async d=>{let ph=null;if(d.photo_path){const g=await sb.storage.from("doc-photos").createSignedUrl(d.photo_path,3600);ph=g.data?g.data.signedUrl:null}
   return{id:d.id,cat:d.cat,name:d.name||"",date:d.date,rem:d.rem,note:d.note||"",photo:ph,photo_path:d.photo_path}}))}
 function authLabels(){const L=t();$("a-title").textContent=L.login;$("a-in").textContent=L.login;$("a-up").textContent=L.signup;$("lb-em").textContent=L.email;$("lb-pw").textContent=L.pw;$("a-lang").textContent=L.lng;$("a-hint").textContent=L.hint}
@@ -261,6 +272,44 @@ $("adlg").addEventListener("cancel",e=>e.preventDefault());
 $("a-in").onclick=()=>doAuth(false);$("a-up").onclick=()=>doAuth(true);
 $("a-lang").onclick=()=>{S.lang=S.lang==="my"?"en":"my";save();authLabels();render()};
 $("s-out").onclick=async()=>{await sb.auth.signOut();location.reload()};
+function activeReq(id){return(S.reqs||[]).find(r=>r.document_id===id&&r.status!=="done"&&r.status!=="cancelled")}
+function rqBtn(it){const a=activeReq(it.id);return `<button class="btn" data-a="rq" data-id="${it.id}">${a?esc(t().st[a.status]):t().rq}</button>`}
+async function loadReqs(){const q=await sb.from("requests").select("*").order("created_at",{ascending:false});S.reqs=q.error?[]:(q.data||[])}
+function imgBlob(f,cb){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);c.toBlob(cb,"image/jpeg",.7)};im.onerror=()=>cb(null);im.src=r.result};r.onerror=()=>cb(null);r.readAsDataURL(f)}
+let slipBlob=null;
+function openReq(docId){
+ const L=t(),it=S.items.find(i=>i.id===docId);if(!it)return;
+ const a=activeReq(docId);slipBlob=null;
+ $("r-title").textContent=L.rqTitle+" · "+L.cats[it.cat];
+ let h="",act="";
+ if(!a){
+  h=`<label for="r-note">${L.rqNote}</label><textarea id="r-note" rows="3"></textarea>`;
+  act=`<button class="btn" id="r-close">${L.cancel}</button><button class="btn pri" id="r-send">${L.rqSend}</button>`;
+ }else{
+  const s=a.status;
+  h=`<p><span class="rq">${esc(L.st[s])}</span></p>`;
+  if(a.price!=null)h+=`<div class="kv"><b>${L.rqPrice}</b><span>${esc(a.price)} ${L.rqBaht}</span></div>`;
+  if(a.admin_note)h+=`<p class="hint">${L.rqAdmin}: ${esc(a.admin_note)}</p>`;
+  if(s==="requested")h+=`<p>${L.rqWait1}</p>`;
+  if(s==="quoted")h+=`<p>${L.rqPay}</p><pre class="pay">${esc(a.pay_info||"")}</pre><label>${L.rqSlip}</label><div class="upl"><label class="btn" for="r-slip">${L.rqSlipPick}</label></div><input type="file" id="r-slip" accept="image/*" class="vh">`;
+  if(s==="payment_submitted")h+=`<p>${L.rqWait2}</p>`;
+  if(s==="confirmed")h+=`<p>${L.rqWait3}</p>`;
+  if(s==="in_progress")h+=`<p>${L.rqWait4}</p>`;
+  act=`<button class="btn" id="r-close">${L.close}</button>`;
+  if(s==="requested"||s==="quoted")act=`<button class="btn del" id="r-cancel">${L.rqCancel}</button>`+act;
+  if(s==="quoted")act+=`<button class="btn pri" id="r-pay">${L.rqSlipSend}</button>`;
+ }
+ $("r-body").innerHTML=h+`<p class="hint" id="r-msg" role="alert"></p>`;$("r-act").innerHTML=act;
+ const on=(i,f)=>{const e=$(i);if(e)e.onclick=f},m=x=>{$("r-msg").textContent=x};
+ const fin=async()=>{await loadReqs();$("rdlg").close();render()};
+ on("r-close",()=>$("rdlg").close());
+ on("r-send",async()=>{const r=await sb.from("requests").insert({user_id:U.id,document_id:docId,doc_cat:it.cat,note:$("r-note").value.trim()});if(r.error)return m(r.error.message);fin()});
+ on("r-cancel",async()=>{const r=await sb.rpc("cancel_request",{req:a.id});if(r.error)return m(r.error.message);fin()});
+ on("r-pay",async()=>{if(!slipBlob)return m(L.rqNoSlip);const p=U.id+"/slips/"+a.id+".jpg";const u=await sb.storage.from("doc-photos").upload(p,slipBlob,{upsert:true,contentType:"image/jpeg"});if(u.error)return m(u.error.message);const r=await sb.rpc("submit_payment",{req:a.id,slip:p});if(r.error)return m(r.error.message);fin()});
+ const sf=$("r-slip");if(sf)sf.onchange=e=>{const f=e.target.files[0];if(f)imgBlob(f,b=>{slipBlob=b;m(b?f.name:L.err)})};
+ $("rdlg").showModal();
+}
+
 load();S.items=[];render();start();
 </script>
 </body>
