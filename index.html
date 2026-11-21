@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thai Docs Tracker · Admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#f3f3ee;--card:#fff;--ink:#1b2340;--mute:#5d6480;--line:#dcdbd2;--brand:#27348b;--on:#fff;--ok:#1d7a4f;--soon:#b7650a;--late:#b3261e;--okbg:#e2f3ea;--soonbg:#fdeccf;--latebg:#fbe0dd;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12162b;--card:#1c2240;--ink:#eceefb;--mute:#a4abd0;--line:#333b66;--brand:#8e9cff;--on:#12162b;--ok:#6fd6a0;--soon:#f2b45c;--late:#ff8f86;--okbg:#17382b;--soonbg:#3f2f12;--latebg:#4a1f1c}}
+:root[data-theme="dark"]{--bg:#12162b;--card:#1c2240;--ink:#eceefb;--mute:#a4abd0;--line:#333b66;--brand:#8e9cff;--on:#12162b;--ok:#6fd6a0;--soon:#f2b45c;--late:#ff8f86;--okbg:#17382b;--soonbg:#3f2f12;--latebg:#4a1f1c}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:16px/1.55 "Figtree",system-ui,sans-serif}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+.login{max-width:380px;margin:12vh auto 0;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px}
+.login h1{margin:0 0 4px;font-size:1.3rem}
+label{display:block;font-weight:600;margin:14px 0 4px;font-size:.92rem}
+input[type=text],input[type=password],input[type=search]{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);min-height:44px}
+.btn{border:1px solid var(--line);background:none;border-radius:10px;padding:8px 14px;cursor:pointer;min-height:40px}
+.btn.pri{background:var(--brand);color:var(--on);border-color:var(--brand);font-weight:700}
+.full{width:100%;margin-top:18px}
+.err{color:var(--late);min-height:1.4em;margin:8px 0 0;font-size:.9rem}
+.mute{color:var(--mute);font-size:.88rem}
+.banner{background:var(--soonbg);border-radius:10px;padding:10px 12px;font-size:.9rem;margin:10px 0 16px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.top h1{margin:0;font-size:1.3rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat b{display:block;font-size:1.9rem;line-height:1.15}
+.stat span{color:var(--mute);font-size:.86rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+@media (max-width:640px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.panel h2{margin:0 0 10px;font-size:1rem}
+.bar{display:grid;grid-template-columns:120px 1fr 34px;gap:8px;align-items:center;margin:6px 0;font-size:.9rem}
+.bar i{display:block;height:12px;border-radius:6px;background:var(--brand)}
+.wk{display:flex;align-items:flex-end;gap:6px;height:110px}
+.wk div{flex:1;text-align:center;font-size:.72rem;color:var(--mute)}
+.wk i{display:block;background:var(--brand);border-radius:4px 4px 0 0;margin-bottom:2px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.92rem;min-width:620px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--mute);font-weight:600;font-size:.82rem}
+.pill{border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--okbg);color:var(--ok)}.pill.soon{background:var(--soonbg);color:var(--soon)}.pill.late{background:var(--latebg);color:var(--late)}.pill.off{background:var(--line);color:var(--mute)}
+.row-top{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.row-top input{flex:1;min-width:160px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const K="tdadmin.cred";
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+let authed=false;
+async function hash(p,salt){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(salt+":"+p));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("")}
+
+/* ---- demo data (replace with your server's user list) ---- */
+function rng(seed){return()=>{seed=(seed*1664525+1013904223)%4294967296;return seed/4294967296}}
+const R=rng(7),pick=a=>a[Math.floor(R()*a.length)];
+const FN=["Aung","Su","Kyaw","Thida","Min","Hnin","Zaw","Mya","Htet","Khin","Naing","Ei","Soe","Phyu","Tun","Nandar"];
+const LN=["Lwin","Mon","Htun","Oo","Aye","Win","Thu","Kyi","Naing","Hlaing","Myint","Zin"];
+const CITY=["Bangkok","Samut Sakhon","Mae Sot","Chiang Mai","Phuket","Pattaya","Ranong"];
+const TYPES=["90-day report","Visa","Passport","Driving license","Work permit","Other"];
+const users=Array.from({length:48},(_,i)=>{
+ const docs=1+Math.floor(R()*5),nd=Math.floor(R()*200)-14;
+ return{id:i+1,name:pick(FN)+" "+pick(LN),city:pick(CITY),lang:R()<.75?"Myanmar":"English",joined:Math.floor(R()*56),active:Math.floor(R()*R()*40),docs,nextDue:nd,off:R()<.04,types:Array.from({length:docs},()=>pick(TYPES))};
+});
+let q="";
+
+function fmtDue(n){return n<0?Math.abs(n)+" days overdue":n===0?"today":"in "+n+" days"}
+function st(u){return u.off?["off","Suspended"]:u.nextDue<0?["late","Overdue"]:u.nextDue<=14?["soon","Due soon"]:["ok","OK"]}
+
+function showLogin(){
+ const has=!!store.get(K);
+ $("#app").innerHTML=`<form class="login" id="lf"><h1>Admin ${has?"login":"setup"}</h1>
+ <p class="mute">${has?"Sign in to see your app’s users.":"First time here: choose an admin username and password."}</p>
+ <label for="u">Username</label><input type="text" id="u" autocomplete="username" required>
+ <label for="p">Password</label><input type="password" id="p" autocomplete="${has?"current-password":"new-password"}" required minlength="8">
+ ${has?"":`<label for="p2">Repeat password</label><input type="password" id="p2" autocomplete="new-password" required minlength="8">`}
+ <p class="err" id="er" role="alert"></p>
+ <button class="btn pri full" type="submit">${has?"Log in":"Create admin account"}</button></form>`;
+ $("#lf").onsubmit=async e=>{
+  e.preventDefault();const u=$("#u").value.trim(),p=$("#p").value,er=$("#er");
+  if(has){const c=JSON.parse(store.get(K));
+   if(u===c.u&&await hash(p,c.s)===c.h){authed=true;showDash()}else er.textContent="Wrong username or password."}
+  else{if(p.length<8)return er.textContent="Use at least 8 characters.";
+   if(p!==$("#p2").value)return er.textContent="Passwords do not match.";
+   const s=String(Math.random()).slice(2);store.set(K,JSON.stringify({u,s,h:await hash(p,s)}));authed=true;showDash()}
+ };
+}
+
+function showDash(){
+ const act=users.filter(u=>u.active<=7&&!u.off).length,nw=users.filter(u=>u.joined<=30).length;
+ const docs=users.reduce((a,u)=>a+u.docs,0),late=users.filter(u=>u.nextDue<0).length;
+ const byType=TYPES.map(t=>[t,users.reduce((a,u)=>a+u.types.filter(x=>x===t).length,0)]);
+ const mx=Math.max(...byType.map(x=>x[1]));
+ const wk=Array.from({length:8},(_,i)=>users.filter(u=>Math.floor(u.joined/7)===7-i).length);const wm=Math.max(...wk,1);
+ $("#app").innerHTML=`<div class="wrap">
+ <div class="top"><h1>Thai Docs Tracker · Admin</h1><button class="btn" id="lo">Log out</button></div>
+ <p class="banner"><b>Demo data.</b> This page shows sample users because the client app saves everything on each person’s own phone. To see real numbers, the app must send sign-ups to a server (see my notes).</p>
+ <div class="stats">
+  <div class="stat"><b>${users.length}</b><span>Total users</span></div>
+  <div class="stat"><b>${act}</b><span>Active, last 7 days</span></div>
+  <div class="stat"><b>${nw}</b><span>New, last 30 days</span></div>
+  <div class="stat"><b>${docs}</b><span>Documents tracked</span></div>
+  <div class="stat"><b>${late}</b><span>Users with overdue item</span></div></div>
+ <div class="grid2">
+  <div class="panel"><h2>Documents by type</h2>${byType.map(([t,n])=>`<div class="bar"><span>${t}</span><i style="width:${Math.max(4,n/mx*100)}%"></i><b>${n}</b></div>`).join("")}</div>
+  <div class="panel"><h2>New users per week (last 8)</h2><div class="wk">${wk.map((n,i)=>`<div><i style="height:${Math.max(3,n/wm*84)}px"></i>${n}<br>W${i+1}</div>`).join("")}</div></div></div>
+ <div class="panel"><h2>Users</h2>
+  <div class="row-top"><input type="search" id="sq" placeholder="Search name or city" aria-label="Search users" value="${esc(q)}"><span class="mute" id="cnt"></span></div>
+  <div class="scroll"><table><thead><tr><th>Name</th><th>City</th><th>Language</th><th>Docs</th><th>Next deadline</th><th>Last active</th><th>Status</th><th></th></tr></thead><tbody id="tb"></tbody></table></div></div></div>`;
+ $("#lo").onclick=()=>{authed=false;showLogin()};
+ $("#sq").oninput=e=>{q=e.target.value;rows()};
+ rows();
+}
+function rows(){
+ const s=q.toLowerCase(),l=users.filter(u=>(u.name+" "+u.city).toLowerCase().includes(s)).sort((a,b)=>a.active-b.active);
+ $("#cnt").textContent=l.length+" shown";
+ $("#tb").innerHTML=l.map(u=>{const[c,t]=st(u);return`<tr><td>${esc(u.name)}</td><td>${esc(u.city)}</td><td>${u.lang}</td><td>${u.docs}</td><td>${fmtDue(u.nextDue)}</td><td>${u.active===0?"today":u.active+" d ago"}</td><td><span class="pill ${c}">${t}</span></td><td><button class="btn" data-id="${u.id}">${u.off?"Restore":"Suspend"}</button></td></tr>`}).join("");
+ document.querySelectorAll("#tb button").forEach(b=>b.onclick=()=>{const u=users.find(x=>x.id==b.dataset.id);u.off=!u.off;showDash();$("#sq").focus()});
+}
+showLogin();
+</script>
+</body>
+</html>
