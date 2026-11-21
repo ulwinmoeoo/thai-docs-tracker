@@ -104,6 +104,7 @@ async function openReq(id){
  let h=`<h2 style="margin:0 0 6px;font-size:1.15rem">${esc(TYPES[r.doc_cat]||"")} · ${esc(u.name)}</h2><p><span class="pill ${pc(s)}">${ST[s]}</span></p>`;
  if(d)h+=`<p class="mute">Number or name: ${esc(d.name||"–")} · Current date: ${esc(d.date)}</p>`;
  if(r.note)h+=`<p>User note: ${esc(r.note)}</p>`;
+ if(r.auto_check)h+=`<p class="mute">Auto-check: ${esc(r.auto_check)}</p>`;
  h+=img+slip;
  let a="";
  if(s==="requested"||s==="quoted"){
