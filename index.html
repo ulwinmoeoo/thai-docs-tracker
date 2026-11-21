@@ -249,8 +249,8 @@ function showAuth(){authLabels();if(!$("adlg").open)$("adlg").showModal()}
 async function start(){const{data}=await sb.auth.getSession();if(!data.session){render();return showAuth()}
  U=data.session.user;sb.from("profiles").update({name:disp(U.email),lang:S.lang==="my"?"my":"en",last_active:new Date().toISOString()}).eq("id",U.id).then(()=>{});
  await loadDocs();render();notifyDue()}
-function toEmail(v){v=v.trim();if(v.includes("@"))return v.toLowerCase();let d=v.replace(/\D/g,"");if(!d)return"";if(!v.startsWith("+")){if(d.startsWith("00"))d=d.slice(2);else if(d.startsWith("0"))d="66"+d.slice(1)}return d.length>=9&&d.length<=15?"p"+d+"@phone.thaidocs.app":""}
-function disp(e){const m=/^p(\d+)@phone\.thaidocs\.app$/.exec(e||"");return m?"+"+m[1]:e}
+function toEmail(v){v=v.trim();if(v.includes("@"))return v.toLowerCase();let d=v.replace(/\D/g,"");if(!d)return"";if(!v.startsWith("+")){if(d.startsWith("00"))d=d.slice(2);else if(d.startsWith("0"))d="66"+d.slice(1)}return d.length>=9&&d.length<=15?"p"+d+"@ulwinmoeoo.github.io":""}
+function disp(e){const m=/^p(\d+)@ulwinmoeoo\.github\.io$/.exec(e||"");return m?"+"+m[1]:e}
 async function doAuth(up){const em=toEmail($("a-email").value),pw=$("a-pw").value,m=$("a-msg");m.textContent="";
  if(!em||pw.length<8){m.textContent=t().pwErr;return}
  const r=up?await sb.auth.signUp({email:em,password:pw}):await sb.auth.signInWithPassword({email:em,password:pw});
