@@ -113,14 +113,39 @@ async function gate(){
  const{data}=await sb.auth.getSession();if(!data.session)return showLogin();
  const a=await sb.from("admins").select("user_id").eq("user_id",data.session.user.id).maybeSingle();
  if(!a.data){await sb.auth.signOut();return showLogin("This account is not an admin.")}
+ const lv=await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+ if(!lv.data||lv.data.currentLevel!=="aal2")return showMfa();
  showDash();
 }
+async function showMfa(){
+ const fl=await sb.auth.mfa.listFactors();
+ const ver=((fl.data&&fl.data.totp)||[]).find(f=>f.status==="verified");
+ let fid=null,qr="",sec="",enroll=false;
+ if(ver)fid=ver.id;
+ else{
+  for(const f of ((fl.data&&fl.data.all)||[]))if(f.status!=="verified")await sb.auth.mfa.unenroll({factorId:f.id});
+  const en=await sb.auth.mfa.enroll({factorType:"totp",friendlyName:"Admin "+Date.now()});
+  if(en.error)return showLogin("Two-step setup failed: "+en.error.message);
+  fid=en.data.id;qr=en.data.totp.qr_code;sec=en.data.totp.secret;enroll=true}
+ $("#app").innerHTML=`<form class="login" id="mf"><h1>Two-step verification</h1>${enroll?`<p class="mute">Scan this QR code with Google Authenticator, Authy or Microsoft Authenticator, then enter the 6-digit code.</p><div style="text-align:center"><img id="qrimg" alt="QR code" style="width:200px;background:#fff;border-radius:12px;padding:8px"></div><p class="mute">Cannot scan? Type this key into the app:</p><code class="mono" style="word-break:break-all">${esc(sec)}</code>`:`<p class="mute">Enter the 6-digit code from your authenticator app.</p>`}<label for="mc">6-digit code</label><input type="text" id="mc" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required><p class="err" id="er" role="alert"></p><button class="btn pri full" type="submit">Verify</button><button class="btn full" type="button" id="mo" style="margin-top:8px">Log out</button></form>`;
+ if(enroll)$("#qrimg").src=qr;
+ $("#mo").onclick=out;
+ $("#mf").onsubmit=async e=>{e.preventDefault();$("#er").textContent="";
+  const c=await sb.auth.mfa.challenge({factorId:fid});if(c.error){$("#er").textContent=c.error.message;return}
+  const v=await sb.auth.mfa.verify({factorId:fid,challengeId:c.data.id,code:$("#mc").value.trim()});
+  if(v.error){$("#er").textContent="Wrong code. Try again.";return}
+  showDash()};
+}
+async function rp(n,a){const r=await sb.rpc(n,a);if(r.error){const m=$("#qm");if(m)m.textContent=r.error.message;else toast(r.error.message);return false}return true}
+let idleAt=Date.now();["pointerdown","keydown","scroll"].forEach(e=>addEventListener(e,()=>{idleAt=Date.now()},{passive:true}));
+setInterval(()=>{if($("#bell")&&Date.now()-idleAt>15*60e3){toast("Logged out after 15 minutes of inactivity");out()}},30000);
+function auditPanel(){const a=(SD&&SD.audit)||[];return `<div class="panel"><h2>Security log <span class="mute">last ${a.length}</span></h2><div class="scroll"><table><thead><tr><th>Time</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead><tbody>${a.map(x=>`<tr><td class="mono">${new Date(x.at).toLocaleString()}</td><td>${esc(x.action)}</td><td class="mono">${esc((x.target||"").slice(0,8))}</td><td>${esc(x.detail||"")}</td></tr>`).join("")||'<tr><td colspan="4" class="mute">Nothing logged yet.</td></tr>'}</tbody></table></div></div>`}
 async function out(){await sb.auth.signOut();showLogin()}
 let reqs=[];
 const ST={requested:"New request",quoted:"Waiting for payment",payment_submitted:"Check payment",confirmed:"Paid, start work",in_progress:"In progress",done:"Done",cancelled:"Cancelled"};
 const pc=s=>s==="done"?"ok":s==="cancelled"?"off":s==="payment_submitted"||s==="requested"?"late":"soon";
 async function upd(id,patch){const r=await sb.from("requests").update(Object.assign({updated_at:new Date().toISOString()},patch)).eq("id",id);if(r.error){$("#qm").textContent=r.error.message;return false}return true}
-async function openReq(id){
+async function openReq(id){sb.rpc("admin_log",{act:"view_request",tgt:id});
  const r=reqs.find(x=>x.id===id),u=users.find(x=>x.id===r.user_id)||{name:""};
  const d=r.document_id?(await sb.from("documents").select("name,date,photo_path").eq("id",r.document_id).maybeSingle()).data:null;
  let img="",slip="";
@@ -145,11 +170,11 @@ async function openReq(id){
  $("#qd").querySelectorAll("[data-act]").forEach(b=>b.onclick=async()=>{
   const k=b.dataset.act;let ok=true;
   if(k==="close")return $("#qd").close();
-  if(k==="quote"){const p=$("#qp").value;if(p===""){$("#qm").textContent="Enter a price.";return}ok=await upd(id,{status:"quoted",price:Number(p),pay_info:$("#qi").value.trim(),admin_note:$("#qn").value.trim()})}
-  if(k==="reject")ok=await upd(id,{status:"quoted",slip_path:null,admin_note:"Payment slip rejected. Please send a clear slip."});
-  if(k==="confirm")ok=await upd(id,{status:"confirmed"});
-  if(k==="start")ok=await upd(id,{status:"in_progress"});
-  if(k==="cancel")ok=await upd(id,{status:"cancelled"});
+  if(k==="quote"){const p=$("#qp").value;if(p===""){$("#qm").textContent="Enter a price.";return}ok=await rp("admin_quote",{req:id,p:Number(p),pay:$("#qi").value.trim(),nt:$("#qn").value.trim()})}
+  if(k==="reject")ok=await rp("admin_reject_slip",{req:id,nt:"Payment slip rejected. Please send a clear slip."});
+  if(k==="confirm")ok=await rp("admin_confirm_payment",{req:id});
+  if(k==="start")ok=await rp("admin_start",{req:id});
+  if(k==="cancel")ok=await rp("admin_cancel",{req:id});
   if(k==="done"){const dt=$("#qd2").value;if(!dt){$("#qm").textContent="Choose the new date.";return}const x=await sb.rpc("admin_complete_request",{req:id,new_d:dt});if(x.error){$("#qm").textContent=x.error.message;ok=false}}
   if(ok){$("#qd").close();showDash()}
  });
@@ -183,7 +208,7 @@ function bellInit(){
  const en=$("#en");if(en)en.onclick=e=>{e.stopPropagation();Notification.requestPermission().then(bellInit)};
 }
 function openUser(id){
- const u=users.find(x=>x.id===id);if(!u)return;
+ const u=users.find(x=>x.id===id);if(!u)return;sb.rpc("admin_log",{act:"view_profile",tgt:id});
  const row=(k,v)=>v?`<div class="pk">${k}</div><div>${esc(v)}</div>`:"";
  const has=u.phone||u.line||u.addr||u.mail||u.emp||u.dob;
  $("#ud").innerHTML=`<h2 style="margin:0 0 4px;font-size:1.15rem">${esc(u.full||u.name)}</h2><p class="mute">Login: ${esc(u.name)}</p><div class="pg">${row("Phone",u.phone)}${row("LINE ID",u.line)}${row("Email",u.mail)}${row("Address",u.addr)}${row("Date of birth",u.dob)}${row("Employer",u.emp)}${row("Prefers",u.pref)}${row("Joined",new Date(u.created).toLocaleDateString())}${row("Last active",u.active===0?"today":u.active+" days ago")}</div>${has?"":'<p class="mute">This user has not filled in a profile yet.</p>'}<div class="acts"><button class="btn" id="uc">Close</button></div>`;
@@ -217,12 +242,12 @@ function hoverDonut(ent,total){
  document.querySelectorAll(".dc,.lg button").forEach(e=>{e.onpointerenter=()=>set(+e.dataset.i);e.onclick=()=>set(+e.dataset.i);e.onpointerleave=()=>set(-1)})}
 async function showDash(){
  $("#app").innerHTML='<div class="wrap"><p class="mute">Loading…</p></div>';
- const[s,p,d,rq]=await Promise.all([sb.rpc("admin_stats"),sb.from("profiles").select("*").order("last_active",{ascending:false}),sb.from("documents").select("user_id,cat,date"),sb.from("requests").select("*").order("created_at",{ascending:false})]);
+ const[s,p,d,rq,au]=await Promise.all([sb.rpc("admin_stats"),sb.from("profiles").select("*").order("last_active",{ascending:false}),sb.from("documents").select("user_id,cat,date"),sb.from("requests").select("*").order("created_at",{ascending:false}),sb.from("audit_log").select("*").order("at",{ascending:false}).limit(25)]);
  const bad=s.error||p.error||d.error;
  if(bad){$("#app").innerHTML=`<div class="wrap"><p class="err">${esc(bad.message)}</p><button class="btn" id="lo">Log out</button></div>`;$("#lo").onclick=out;return}
  const now=Date.now();reqs=rq.error?[]:rq.data;
  users=p.data.map(u=>{const my=d.data.filter(x=>x.user_id===u.id);return{id:u.id,full:u.full_name||"",phone:u.phone||"",addr:u.address||"",line:u.line_id||"",mail:u.email||"",dob:u.dob||"",emp:u.employer||"",pref:u.contact_pref||"",created:u.created_at,name:u.name||"(no name yet)",lang:u.lang==="my"?"Myanmar":"English",docs:my.length,nextDue:my.length?Math.min(...my.map(due)):null,active:Math.floor((now-new Date(u.last_active))/DAY),joined:Math.floor((now-new Date(u.created_at))/DAY),off:u.suspended}});
- SD={s:s.data};draw();
+ SD={s:s.data,audit:au.error?[]:au.data};draw();
 }
 function draw(){
  const t=SD.s,now=Date.now(),bt=t.by_type||{},ent=Object.keys(TYPES).map(k=>[TYPES[k],bt[k]||0]);
@@ -243,7 +268,7 @@ function draw(){
  <div class="panel"><h2>Renewal requests <span class="mute" id="rf"></span></h2><div class="scroll"><table><thead><tr><th>User</th><th>Document</th><th>Status</th><th>Price</th><th>Date</th><th></th></tr></thead><tbody id="rb"></tbody></table></div></div>
  <dialog id="qd"></dialog><dialog id="ud"></dialog>
  <div class="panel"><h2>Users</h2><div class="row-top"><input type="search" id="sq" placeholder="Search name, phone, LINE or email" aria-label="Search users" value="${esc(q)}"><span class="mute" id="cnt"></span></div>
- <div class="scroll"><table><thead><tr><th>User</th><th>Language</th><th>Docs</th><th>Next deadline</th><th>Last active</th><th>Status</th><th></th></tr></thead><tbody id="tb"></tbody></table></div></div></div>`;
+ <div class="scroll"><table><thead><tr><th>User</th><th>Language</th><th>Docs</th><th>Next deadline</th><th>Last active</th><th>Status</th><th></th></tr></thead><tbody id="tb"></tbody></table></div></div>${auditPanel()}</div>`;
  document.querySelectorAll("[data-n]").forEach(cnt);
  $("#lo").onclick=out;$("#sq").oninput=e=>{q=e.target.value;rows()};
  document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{rng=+b.dataset.r;draw()});
@@ -255,7 +280,7 @@ function rows(){
  const k=q.toLowerCase(),l=users.filter(u=>(u.name+" "+u.full+" "+u.phone+" "+u.line).toLowerCase().includes(k));
  $("#cnt").textContent=l.length+" shown";
  $("#tb").innerHTML=l.map(u=>{const[c,tx]=st(u);return`<tr><td><button class="lnk" data-u="${u.id}">${esc(u.full||u.name)}</button>${u.full?`<div class="mute">${esc(u.name)}</div>`:""}</td><td>${u.lang}</td><td>${u.docs}</td><td>${fmtDue(u.nextDue)}</td><td>${u.active===0?"today":u.active+" d ago"}</td><td><span class="pill ${c}">${tx}</span></td><td><button class="btn" data-id="${u.id}">${u.off?"Restore":"Suspend"}</button></td></tr>`}).join("");
- document.querySelectorAll("#tb [data-u]").forEach(b=>b.onclick=()=>openUser(b.dataset.u));document.querySelectorAll("#tb button[data-id]").forEach(b=>b.onclick=async()=>{const u=users.find(x=>x.id===b.dataset.id);await sb.from("profiles").update({suspended:!u.off}).eq("id",u.id);showDash()});
+ document.querySelectorAll("#tb [data-u]").forEach(b=>b.onclick=()=>openUser(b.dataset.u));document.querySelectorAll("#tb button[data-id]").forEach(b=>b.onclick=async()=>{const u=users.find(x=>x.id===b.dataset.id);const sx=await sb.rpc("admin_set_suspended",{uid:u.id,flag:!u.off});if(sx.error)toast(sx.error.message);showDash()});
 }
 gate();
 </script>

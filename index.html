@@ -76,16 +76,26 @@ pre.pay{white-space:pre-wrap;background:var(--card);border:1px solid var(--line)
 .qr{display:block;width:min(260px,100%);margin:8px auto;border-radius:14px;border:1px solid var(--line);background:#fff}
 @media (prefers-reduced-motion:no-preference){.hero,.item{animation:in .45s ease-out both}@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.g-fg{transition:stroke-dasharray 1s cubic-bezier(.2,.8,.2,1)}}
 .hdr-r{display:flex;gap:8px;align-items:center}.btn.ic{padding:0;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--card)}
+[hidden]{display:none!important}
+.hdr-r{position:relative}.btn.ic{position:relative}
+.badge{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;border-radius:99px;background:var(--late);color:#fff;font:700 .7rem "JetBrains Mono",monospace;display:grid;place-items:center;padding:0 5px;box-shadow:0 0 10px var(--late)}
+.menu{position:absolute;right:0;top:50px;width:min(92vw,340px);max-height:70vh;overflow:auto;background:var(--bg2);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.45);z-index:20}
+.mh{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.mi{display:flex;gap:10px;align-items:center;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 12px;cursor:pointer;text-align:left}
+.mi:hover{background:var(--line)}.mi i{width:10px;height:10px;border-radius:50%;flex:none;background:var(--brand)}
+.mi.quoted i,.mi.late i{background:var(--late)}.mi.soon i{background:var(--soon)}.mi.done i,.mi.confirmed i{background:var(--ok)}
+.mi span{flex:1;min-width:0}.mi b,.mi small{display:block}.mi small,.mi time{color:var(--mute);font-size:.78rem}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--brand);border-radius:14px;padding:10px 16px;z-index:50;box-shadow:0 0 24px rgba(110,168,255,.4);max-width:90vw}
 </style>
 </head>
 <body>
 <main>
   <header>
     <div><h1 id="t-title"></h1><p class="sub" id="t-sub"></p></div>
-    <div class="hdr-r"><button class="btn ic" id="open-prof" aria-label="Profile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></button><div class="seg" role="group" aria-label="Language">
+    <div class="hdr-r"><button class="btn ic" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="badge" id="bd" hidden>0</span></button><button class="btn ic" id="open-prof" aria-label="Profile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></button><div class="seg" role="group" aria-label="Language">
       <button id="l-my" aria-pressed="false">မြန်မာ</button>
       <button id="l-en" aria-pressed="true">EN</button>
-    </div></div>
+    </div><div class="menu" id="bm" hidden></div></div>
   </header>
   <div id="next"></div>
   <div class="chips" id="chips" role="group"></div>
@@ -183,6 +193,9 @@ Object.assign(T.en,{rq:"Request renewal",rqTitle:"Renewal request",rqNote:"Messa
 Object.assign(T.my,{rq:"သက်တမ်းတိုးရန် တောင်းဆိုမည်",rqTitle:"သက်တမ်းတိုး တောင်းဆိုမှု",rqNote:"Admin သို့ မက်ဆေ့ချ် (မဖြည့်လည်းရ)",rqSend:"တောင်းဆိုမှု ပို့မည်",st:{requested:"ဈေးနှုန်း စောင့်နေသည်",quoted:"ငွေပေးချေရန်",payment_submitted:"ငွေပေးချေမှု စစ်နေသည်",confirmed:"ငွေလက်ခံပြီး",in_progress:"ဆောင်ရွက်နေသည်",done:"ပြီးပါပြီ",cancelled:"ပယ်ဖျက်ပြီး"},rqPrice:"ကျသင့်ငွေ",rqBaht:"ဘတ်",rqPay:"ငွေပေးချေရန် အချက်အလက်",rqSlip:"ငွေလွှဲပြေစာ ဓာတ်ပုံ တင်ပါ",rqSlipPick:"ပြေစာဓာတ်ပုံ ရွေးမည်",rqSlipSend:"ပြေစာ ပို့မည်",rqCancel:"တောင်းဆိုမှု ပယ်ဖျက်မည်",rqAdmin:"Admin မှတ်ချက်",rqWait1:"Admin က ဈေးနှုန်း ပြင်ဆင်နေပါသည်။ ခဏစောင့်ပါ။",rqWait2:"ငွေပေးချေမှု လက်ခံရရှိပြီး Admin စစ်ဆေးနေပါသည်။",rqWait3:"ငွေလက်ခံပြီးပါပြီ။ Admin မကြာမီ စတင်ပါမည်။",rqWait4:"Admin က သင့်တောင်းဆိုမှုကို ဆောင်ရွက်နေပါသည်။",rqNoSlip:"ပြေစာဓာတ်ပုံ အရင်ရွေးပါ။",rqQrHint:"ဤ QR ကို ဘဏ်အက်ပ်ဖြင့် စကန်ဖတ်ပါ၊ ဒါမှမဟုတ် ပုံကိုသိမ်းပြီး ဘဏ်အက်ပ်ထဲက ရွေးပါ။ ပြထားသော ကျသင့်ငွေ အတိအကျ ပေးပါ။",tOk:"ပုံမှန်",tSoon:"နီးပါပြီ",tLate:"ကျော်လွန်",rqChecking:"ငွေပေးချေမှု စစ်ဆေးနေသည်...",rqAuto:"ငွေပေးချေမှု အလိုအလျောက် အတည်ပြုပြီးပါပြီ ✔",rqManual:"ပြေစာ ပို့ပြီးပါပြီ။ Admin မကြာမီ စစ်ဆေးပါမည်။"});
 Object.assign(T.en,{pf:"My profile",pfOpt:"Everything here is optional. We only use it to contact you about your renewals.",pfName:"Full name",pfPhone:"Phone number",pfAddr:"Address in Thailand",pfLine:"LINE ID",pfEmail:"Email",pfDob:"Date of birth",pfEmp:"Employer or workplace",pfPref:"Preferred way to contact you",pfSaved:"Saved ✔"});
 Object.assign(T.my,{pf:"ကိုယ်ရေးအချက်အလက်",pfOpt:"ဒီမှာ အားလုံး မဖြည့်လည်းရပါတယ်။ သင့်သက်တမ်းတိုးကိစ္စအတွက် ဆက်သွယ်ရန်သာ သုံးပါမည်။",pfName:"အမည်အပြည့်အစုံ",pfPhone:"ဖုန်းနံပါတ်",pfAddr:"ထိုင်းနိုင်ငံရှိ လိပ်စာ",pfLine:"LINE ID",pfEmail:"အီးမေးလ်",pfDob:"မွေးသက္ကရာဇ်",pfEmp:"အလုပ်ရှင် သို့မဟုတ် အလုပ်ခွင်",pfPref:"ဆက်သွယ်စေလိုသည့်နည်း",pfSaved:"သိမ်းပြီးပါပြီ ✔"});
+Object.assign(T.en,{nTitle:"Notifications",nNone:"No updates yet.",nEnable:"Enable alerts",nReq:"Request sent. Waiting for a price",nQuoted:"Price ready: {p} THB. Please pay",nPaid:"Payment received. Being checked",nConf:"Payment confirmed",nProg:"The admin is working on it",nDone:"Done! Your document date was updated",nCancel:"Request cancelled",nSoon:"Due in {n} days",nLate:"Overdue by {n} days",nUpdate:"Your request has an update"});
+Object.assign(T.my,{nTitle:"အသိပေးချက်များ",nNone:"အသစ် မရှိသေးပါ။",nEnable:"alert ဖွင့်မည်",nReq:"တောင်းဆိုမှု ပို့ပြီး၊ ဈေးနှုန်း စောင့်နေသည်",nQuoted:"ဈေးနှုန်းရပြီ: {p} ဘတ်၊ ငွေပေးချေပါ",nPaid:"ငွေပေးချေမှု လက်ခံရရှိ၊ စစ်ဆေးနေသည်",nConf:"ငွေလက်ခံပြီးပါပြီ",nProg:"Admin က ဆောင်ရွက်နေသည်",nDone:"ပြီးပါပြီ! စာရွက်စာတမ်း ရက်စွဲ ပြင်ပြီးပါပြီ",nCancel:"တောင်းဆိုမှု ပယ်ဖျက်ပြီး",nSoon:"{n} ရက်လိုသည်",nLate:"{n} ရက် ကျော်လွန်နေပြီ",nUpdate:"သင့်တောင်းဆိုမှုတွင် အပြောင်းအလဲ ရှိသည်"});
+Object.assign(T.en,{sus:"This account is suspended. Please contact support."});Object.assign(T.my,{sus:"ဤအကောင့်ကို ယာယီရပ်ဆိုင်းထားပါသည်။ အကူအညီအတွက် ဆက်သွယ်ပါ။"});
 const ORDER=["r90","visa","passport","license","permit","other"];
 let S={lang:"en",filter:"all",items:[],set:{browser:false,line:false,lineid:"",tg:false}},editId=null,photo=null;
 const $=id=>document.getElementById(id);
@@ -206,6 +219,7 @@ function render(){
  $("chips").innerHTML=["all",...ORDER].map(k=>`<button data-k="${k}" aria-pressed="${S.filter===k}">${k==="all"?L.all:L.cats[k]}</button>`).join("");
  const vis=sorted.filter(i=>S.filter==="all"||i.cat===S.filter);
  $("list").innerHTML=vis.length?vis.map(card).join(""):`<div class="empty">${L.empty}</div>`;
+ bellInit();
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function heroHtml(list){
@@ -297,7 +311,7 @@ function authLabels(){const L=t();$("a-title").textContent=L.login;$("a-in").tex
 function showAuth(){authLabels();if(!$("adlg").open)$("adlg").showModal()}
 async function start(){const{data}=await sb.auth.getSession();if(!data.session){render();return showAuth()}
  U=data.session.user;sb.from("profiles").update({name:disp(U.email),lang:S.lang==="my"?"my":"en",last_active:new Date().toISOString()}).eq("id",U.id).then(()=>{});
- {const pr=await sb.from("profiles").select("*").eq("id",U.id).maybeSingle();S.prof=pr.data||{}}
+ {const pr=await sb.from("profiles").select("*").eq("id",U.id).maybeSingle();S.prof=pr.data||{};if(S.prof.suspended){await sb.auth.signOut();U=null;S.items=[];render();showAuth();$("a-msg").textContent=t().sus;return}}
  await loadDocs();render();notifyDue()}
 function toEmail(v){v=v.trim();if(v.includes("@"))return v.toLowerCase();let d=v.replace(/\D/g,"");if(!d)return"";if(!v.startsWith("+")){if(d.startsWith("00"))d=d.slice(2);else if(d.startsWith("0"))d="66"+d.slice(1)}return d.length>=9&&d.length<=15?"p"+d+"@ulwinmoeoo.github.io":""}
 function disp(e){const m=/^p(\d+)@ulwinmoeoo\.github\.io$/.exec(e||"");return m?"+"+m[1]:e}
@@ -314,7 +328,7 @@ $("s-out").onclick=async()=>{await sb.auth.signOut();location.reload()};
 function activeReq(id){return(S.reqs||[]).find(r=>r.document_id===id&&r.status!=="done"&&r.status!=="cancelled")}
 function rqBtn(it){const a=activeReq(it.id);return `<button class="btn" data-a="rq" data-id="${it.id}">${a?esc(t().st[a.status]):t().rq}</button>`}
 async function loadReqs(){const q=await sb.from("requests").select("*").order("created_at",{ascending:false});S.reqs=q.error?[]:(q.data||[])}
-function imgBlob(f,cb){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);c.toBlob(cb,"image/jpeg",.7)};im.onerror=()=>cb(null);im.src=r.result};r.onerror=()=>cb(null);r.readAsDataURL(f)}
+function imgBlob(f,cb){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);c.toBlob(cb,"image/jpeg",.85)};im.onerror=()=>cb(null);im.src=r.result};r.onerror=()=>cb(null);r.readAsDataURL(f)}
 let slipBlob=null;
 function openReq(docId){
  const L=t(),it=S.items.find(i=>i.id===docId);if(!it)return;
@@ -361,6 +375,36 @@ $("pf-save").onclick=async()=>{const g=i=>$(i).value.trim()||null;
  const r=await sb.from("profiles").update(o).eq("id",U.id).select().maybeSingle();
  if(r.error){$("pf-msg").textContent=t().err2+" "+r.error.message;return}
  S.prof=r.data||Object.assign(S.prof||{},o);$("pf-msg").textContent=t().pfSaved;setTimeout(()=>$("pdlg").close(),700)};
+const SEEN="thaidocs.seen";
+function getSeen(){try{let v=localStorage.getItem(SEEN);if(v===null){v=String(Date.now());localStorage.setItem(SEEN,v)}return +v}catch(e){return 0}}
+function agoT(t){const m=Math.round((Date.now()-t)/6e4);return m<1?"now":m<60?m+"m":m<1440?Math.round(m/60)+"h":Math.round(m/1440)+"d"}
+function toast(m){const d=document.createElement("div");d.className="toast";d.setAttribute("role","status");d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),4500)}
+function myNotes(){
+ const L=t(),seen=getSeen(),out=[];
+ (S.reqs||[]).forEach(r=>{
+  const it=S.items.find(i=>i.id===r.document_id),dn=it?L.cats[it.cat]:(L.cats[r.doc_cat]||"");
+  const msg={requested:L.nReq,quoted:L.nQuoted.replace("{p}",r.price),payment_submitted:L.nPaid,confirmed:L.nConf,in_progress:L.nProg,done:L.nDone,cancelled:L.nCancel};
+  const ts=new Date(r.updated_at||r.created_at).getTime();
+  out.push({k:r.status,doc:r.document_id,title:msg[r.status]||r.status,sub:dn,t:ts,act:r.status==="quoted",unread:ts>seen&&r.status!=="requested"});
+ });
+ S.items.forEach(i=>{const s=state(i),n=left(i);if(s!=="ok")out.push({k:s,doc:i.id,title:(s==="late"?L.nLate:L.nSoon).replace("{n}",Math.abs(n)),sub:L.cats[i.cat]+(i.name?" · "+i.name:""),t:Date.now()-1,act:1,edit:1})});
+ return out.sort((a,b)=>b.t-a.t).slice(0,30)}
+function bellInit(){
+ const b=$("bell");if(!b)return;const L=t(),N=myNotes(),n=N.filter(x=>x.act||x.unread).length;
+ $("bd").textContent=n>99?"99+":n;$("bd").hidden=!n;
+ $("bm").innerHTML=`<div class="mh"><b>${L.nTitle}</b>${"Notification" in window&&Notification.permission==="default"?`<button class="link" id="en">${L.nEnable}</button>`:""}</div>`+(N.length?N.map((x,i)=>`<button class="mi ${x.k}" data-i="${i}"><i></i><span><b>${esc(x.title)}</b><small>${esc(x.sub)}</small></span><time>${x.edit?"":agoT(x.t)}</time></button>`).join(""):`<p class="hint" style="padding:12px">${L.nNone}</p>`);
+ b.onclick=e=>{e.stopPropagation();const m=$("bm");m.hidden=!m.hidden;if(!m.hidden){try{localStorage.setItem(SEEN,Date.now())}catch(_){}setTimeout(()=>{const c=myNotes().filter(y=>y.act||y.unread).length;$("bd").textContent=c;$("bd").hidden=!c},0)}};
+ document.onclick=e=>{const m=$("bm");if(m&&!m.hidden&&!m.contains(e.target))m.hidden=true};
+ $("bm").querySelectorAll(".mi").forEach(el=>el.onclick=()=>{const x=N[+el.dataset.i];$("bm").hidden=true;if(x.edit)openDlg(x.doc);else if(x.doc&&x.k!=="done"&&x.k!=="cancelled")openReq(x.doc)});
+ const en=$("en");if(en)en.onclick=e=>{e.stopPropagation();Notification.requestPermission().then(()=>bellInit())};
+}
+const rsig=()=>(S.reqs||[]).map(r=>r.id+r.status+r.updated_at).join();
+async function pollReqs(){
+ if(!U||document.querySelector("dialog[open]"))return;
+ const old=rsig();await loadReqs();
+ if(rsig()!==old){toast(t().nUpdate);try{if(S.set.browser&&"Notification" in window&&Notification.permission==="granted")new Notification("Thai Docs Tracker",{body:t().nUpdate})}catch(_){}await loadDocs();render()}
+}
+setInterval(pollReqs,30000);
 load();S.items=[];render();start();
 </script>
 </body>
