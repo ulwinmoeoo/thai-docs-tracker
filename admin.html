@@ -72,6 +72,19 @@ dialog{border:1px solid var(--line);border-radius:20px;background:var(--bg2);col
 dialog::backdrop{background:rgba(3,6,18,.65);backdrop-filter:blur(3px)}
 .slip{max-width:100%;border-radius:12px;border:1px solid var(--line)}
 .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}
+[hidden]{display:none!important}
+.bar-r{display:flex;gap:8px;align-items:center;position:relative}
+.bell{position:relative;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.badge{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;border-radius:99px;background:var(--late);color:#fff;font:700 .7rem "JetBrains Mono",monospace;display:grid;place-items:center;padding:0 5px;box-shadow:0 0 10px var(--late);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.menu{position:absolute;right:0;top:52px;width:min(92vw,340px);max-height:70vh;overflow:auto;background:var(--bg2);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.45);z-index:20}
+.mh{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.mi{display:flex;gap:10px;align-items:center;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 12px;cursor:pointer;text-align:left}
+.mi:hover{background:var(--line)}.mi i{width:10px;height:10px;border-radius:50%;flex:none;background:var(--brand)}.mi.req i{background:var(--late)}.mi.pay i{background:var(--soon)}.mi.go i{background:var(--ok)}
+.mi span{flex:1;min-width:0}.mi b,.mi small{display:block}.mi small,.mi time{color:var(--mute);font-size:.78rem}
+.lnk{background:none;border:0;color:var(--brand);cursor:pointer;padding:0;text-align:left;font:inherit;text-decoration:underline}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--brand);border-radius:14px;padding:10px 16px;z-index:50;box-shadow:0 0 24px rgba(110,168,255,.4)}
+.pg{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin-top:10px}.pk{color:var(--mute)}
 </style>
 </head>
 <body>
@@ -114,10 +127,11 @@ async function openReq(id){
  if(d&&d.photo_path){const g=await sb.storage.from("doc-photos").createSignedUrl(d.photo_path,3600);if(g.data)img=`<p class="mute">Document photo</p><img class="slip" src="${g.data.signedUrl}" alt="">`}
  if(r.slip_path){const g=await sb.storage.from("doc-photos").createSignedUrl(r.slip_path,3600);if(g.data)slip=`<p class="mute">Payment slip</p><img class="slip" src="${g.data.signedUrl}" alt="">`}
  const s=r.status;
- let h=`<h2 style="margin:0 0 6px;font-size:1.15rem">${esc(TYPES[r.doc_cat]||"")} · ${esc(u.name)}</h2><p><span class="pill ${pc(s)}">${ST[s]}</span></p>`;
+ let h=`<h2 style="margin:0 0 6px;font-size:1.15rem">${esc(TYPES[r.doc_cat]||"")} · ${esc(u.full||u.name)}</h2><p><span class="pill ${pc(s)}">${ST[s]}</span></p>`;
  if(d)h+=`<p class="mute">Number or name: ${esc(d.name||"–")} · Current date: ${esc(d.date)}</p>`;
  if(r.note)h+=`<p>User note: ${esc(r.note)}</p>`;
  if(r.auto_check)h+=`<p class="mute">Auto-check: ${esc(r.auto_check)}</p>`;
+ if(u.phone||u.line||u.pref)h+=`<p class="mute">Contact: ${[u.phone&&"Phone "+u.phone,u.line&&"LINE "+u.line,u.pref&&"prefers "+u.pref].filter(Boolean).map(esc).join(" · ")}</p>`;
  h+=img+slip;
  let a="";
  if(s==="requested"||s==="quoted"){
@@ -143,12 +157,44 @@ async function openReq(id){
 }
 
 function reqRows(){
- const nm=id=>(users.find(u=>u.id===id)||{}).name||"";
+ const nm=id=>{const u=users.find(x=>x.id===id)||{};return u.full||u.name||""};
  const l=reqs.filter(r=>flt==="all"||r.status===flt);
  $("#rb").innerHTML=l.map(r=>`<tr><td>${esc(nm(r.user_id))}</td><td>${esc(TYPES[r.doc_cat]||"")}</td><td><span class="pill ${pc(r.status)}">${ST[r.status]}</span></td><td class="mono">${r.price!=null?esc(r.price):"–"}</td><td>${new Date(r.created_at).toLocaleDateString()}</td><td><button class="btn" data-r="${r.id}">Open</button></td></tr>`).join("")||'<tr><td colspan="6" class="mute">No requests here.</td></tr>';
  document.querySelectorAll("#rb button").forEach(b=>b.onclick=()=>openReq(b.dataset.r));
 }
 let rng=30,flt="all",SD=null;
+const ago=t=>{const m=Math.round((Date.now()-t)/6e4);return m<1?"now":m<60?m+"m":m<1440?Math.round(m/60)+"h":Math.round(m/1440)+"d"};
+function toast(m){const d=document.createElement("div");d.className="toast";d.setAttribute("role","status");d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),4500)}
+function seenAt(){try{return +(localStorage.getItem("tdadmin.seen")||0)}catch(_){return 0}}
+function notes(){
+ const nm=id=>{const u=users.find(x=>x.id===id)||{};return u.full||u.name||""},seen=seenAt(),L=[];
+ reqs.forEach(r=>{const k=r.status==="requested"?["req","New renewal request"]:r.status==="payment_submitted"?["pay","Check payment slip"]:r.status==="confirmed"?["go","Paid, start the work"]:null;if(k)L.push({k:k[0],id:r.id,title:k[1],sub:(TYPES[r.doc_cat]||"")+" · "+nm(r.user_id),t:new Date(r.updated_at||r.created_at).getTime(),act:1})});
+ users.forEach(u=>{const ts=new Date(u.created).getTime();if(Date.now()-ts<DAY)L.push({k:"user",id:u.id,title:"New user",sub:u.full||u.name,t:ts,unread:ts>seen})});
+ return L.sort((a,b)=>b.t-a.t)}
+let lastAct=-1;
+function bellInit(){
+ const b=$("#bell");if(!b)return;const L=notes(),n=L.filter(x=>x.act||x.unread).length;
+ lastAct=reqs.filter(x=>x.status==="requested"||x.status==="payment_submitted").length;
+ const bd=$("#bd");bd.textContent=n>99?"99+":n;bd.hidden=!n;
+ $("#bm").innerHTML=`<div class="mh"><b>Notifications</b>${"Notification" in window&&Notification.permission==="default"?'<button class="lnk" id="en">Enable alerts</button>':""}</div>`+(L.length?L.map((x,i)=>`<button class="mi ${x.k}" data-i="${i}"><i></i><span><b>${esc(x.title)}</b><small>${esc(x.sub)}</small></span><time>${ago(x.t)}</time></button>`).join(""):'<p class="mute" style="padding:12px">All caught up.</p>');
+ b.onclick=e=>{e.stopPropagation();const m=$("#bm");m.hidden=!m.hidden;if(!m.hidden){try{localStorage.setItem("tdadmin.seen",Date.now())}catch(_){}}};
+ document.onclick=e=>{const m=$("#bm");if(m&&!m.hidden&&!m.contains(e.target))m.hidden=true};
+ $("#bm").querySelectorAll(".mi").forEach(el=>el.onclick=()=>{const x=L[+el.dataset.i];$("#bm").hidden=true;x.k==="user"?openUser(x.id):openReq(x.id)});
+ const en=$("#en");if(en)en.onclick=e=>{e.stopPropagation();Notification.requestPermission().then(bellInit)};
+}
+function openUser(id){
+ const u=users.find(x=>x.id===id);if(!u)return;
+ const row=(k,v)=>v?`<div class="pk">${k}</div><div>${esc(v)}</div>`:"";
+ const has=u.phone||u.line||u.addr||u.mail||u.emp||u.dob;
+ $("#ud").innerHTML=`<h2 style="margin:0 0 4px;font-size:1.15rem">${esc(u.full||u.name)}</h2><p class="mute">Login: ${esc(u.name)}</p><div class="pg">${row("Phone",u.phone)}${row("LINE ID",u.line)}${row("Email",u.mail)}${row("Address",u.addr)}${row("Date of birth",u.dob)}${row("Employer",u.emp)}${row("Prefers",u.pref)}${row("Joined",new Date(u.created).toLocaleDateString())}${row("Last active",u.active===0?"today":u.active+" days ago")}</div>${has?"":'<p class="mute">This user has not filled in a profile yet.</p>'}<div class="acts"><button class="btn" id="uc">Close</button></div>`;
+ $("#uc").onclick=()=>$("#ud").close();$("#ud").showModal()}
+async function poll(){
+ if(!$("#bell")||document.querySelector("dialog[open]"))return;
+ const r=await sb.from("requests").select("*").order("created_at",{ascending:false});if(r.error)return;
+ const sg=a=>a.map(x=>x.id+x.status+x.updated_at).join(),act=r.data.filter(x=>x.status==="requested"||x.status==="payment_submitted").length;
+ if(sg(r.data)!==sg(reqs)){const prev=lastAct;reqs=r.data;if(act>prev){toast("New request needs your attention");try{if(Notification.permission==="granted")new Notification("Thai Docs Tracker",{body:"A request needs your attention"})}catch(_){}}draw()}}
+setInterval(poll,30000);
+
 const COL=["#6ea8ff","#9b6bff","#2de2a0","#ffc14d","#ff6b81","#22d3ee"];
 function cnt(el){const to=+el.dataset.n;if(matchMedia("(prefers-reduced-motion:reduce)").matches){el.textContent=to.toLocaleString();return}const t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/700);el.textContent=Math.round(to*(1-Math.pow(1-k,3))).toLocaleString();if(k<1)requestAnimationFrame(f)})(t0)}
 function area(vals,labs){
@@ -175,7 +221,7 @@ async function showDash(){
  const bad=s.error||p.error||d.error;
  if(bad){$("#app").innerHTML=`<div class="wrap"><p class="err">${esc(bad.message)}</p><button class="btn" id="lo">Log out</button></div>`;$("#lo").onclick=out;return}
  const now=Date.now();reqs=rq.error?[]:rq.data;
- users=p.data.map(u=>{const my=d.data.filter(x=>x.user_id===u.id);return{id:u.id,name:u.name||"(no name yet)",lang:u.lang==="my"?"Myanmar":"English",docs:my.length,nextDue:my.length?Math.min(...my.map(due)):null,active:Math.floor((now-new Date(u.last_active))/DAY),joined:Math.floor((now-new Date(u.created_at))/DAY),off:u.suspended}});
+ users=p.data.map(u=>{const my=d.data.filter(x=>x.user_id===u.id);return{id:u.id,full:u.full_name||"",phone:u.phone||"",addr:u.address||"",line:u.line_id||"",mail:u.email||"",dob:u.dob||"",emp:u.employer||"",pref:u.contact_pref||"",created:u.created_at,name:u.name||"(no name yet)",lang:u.lang==="my"?"Myanmar":"English",docs:my.length,nextDue:my.length?Math.min(...my.map(due)):null,active:Math.floor((now-new Date(u.last_active))/DAY),joined:Math.floor((now-new Date(u.created_at))/DAY),off:u.suspended}});
  SD={s:s.data};draw();
 }
 function draw(){
@@ -188,28 +234,28 @@ function draw(){
  const order=["requested","quoted","payment_submitted","confirmed","in_progress","done","cancelled"],cn=s=>reqs.filter(r=>r.status===s).length,sm=Math.max(1,...order.map(cn));
  const K=(n,l,c)=>`<div class="kpi" style="--c:${c}"><b data-n="${n}">0</b><span>${l}</span></div>`;
  $("#app").innerHTML=`<div class="wrap">
- <div class="top"><div><h1>Thai Docs Tracker</h1><span class="mute">Admin · live data</span></div><button class="btn" id="lo">Log out</button></div>
+ <div class="top"><div><h1>Thai Docs Tracker</h1><span class="mute">Admin · live data</span></div><div class="bar-r"><button class="bell" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="badge" id="bd" hidden>0</span></button><button class="btn" id="lo">Log out</button><div class="menu" id="bm" hidden></div></div></div>
  <div class="kpis">${K(t.total_users,"Total users","#6ea8ff")}${K(t.active_7d,"Active, 7 days","#2de2a0")}${K(t.new_30d,"New, 30 days","#9b6bff")}${K(t.documents,"Documents tracked","#22d3ee")}${K(need,"Needs your action","#ff6b81")}${K(Math.round(rev),"Revenue (THB)","#ffc14d")}</div>
  <div class="grid2"><div class="panel"><h2>New users <span class="seg" role="group" aria-label="Range">${[7,30,90].map(r=>`<button data-r="${r}" aria-pressed="${r===rng}">${r}d</button>`).join("")}</span></h2>${area(vals,labs)}</div>
  <div class="panel"><h2>Documents by type</h2>${donut(ent,t.documents)}</div></div>
  <div class="grid3"><div class="panel"><h2>Request pipeline</h2><div class="stages"><button class="stage ${flt==="all"?"on":""}" data-s="all"><span>All</span><span class="sbar"><i style="width:100%"></i></span><b>${reqs.length}</b></button>${order.map(s=>`<button class="stage ${flt===s?"on":""}" data-s="${s}"><span>${ST[s]}</span><span class="sbar"><i style="width:${cn(s)/sm*100}%"></i></span><b>${cn(s)}</b></button>`).join("")}</div></div>
  <div class="panel"><h2>Revenue per week (THB)</h2><div class="bars">${wk.map((v,i)=>`<div class="vb" tabindex="0" aria-label="${v} THB"><em>${v}</em><i style="height:${Math.max(2,v/wm*100)}%"></i><span>W${i+1}</span></div>`).join("")}</div></div></div>
  <div class="panel"><h2>Renewal requests <span class="mute" id="rf"></span></h2><div class="scroll"><table><thead><tr><th>User</th><th>Document</th><th>Status</th><th>Price</th><th>Date</th><th></th></tr></thead><tbody id="rb"></tbody></table></div></div>
- <dialog id="qd"></dialog>
- <div class="panel"><h2>Users</h2><div class="row-top"><input type="search" id="sq" placeholder="Search phone or email" aria-label="Search users" value="${esc(q)}"><span class="mute" id="cnt"></span></div>
+ <dialog id="qd"></dialog><dialog id="ud"></dialog>
+ <div class="panel"><h2>Users</h2><div class="row-top"><input type="search" id="sq" placeholder="Search name, phone, LINE or email" aria-label="Search users" value="${esc(q)}"><span class="mute" id="cnt"></span></div>
  <div class="scroll"><table><thead><tr><th>User</th><th>Language</th><th>Docs</th><th>Next deadline</th><th>Last active</th><th>Status</th><th></th></tr></thead><tbody id="tb"></tbody></table></div></div></div>`;
  document.querySelectorAll("[data-n]").forEach(cnt);
  $("#lo").onclick=out;$("#sq").oninput=e=>{q=e.target.value;rows()};
  document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{rng=+b.dataset.r;draw()});
  document.querySelectorAll(".stage").forEach(b=>b.onclick=()=>{flt=b.dataset.s;document.querySelectorAll(".stage").forEach(x=>x.classList.toggle("on",x===b));$("#rf").textContent=flt==="all"?"":"· "+ST[flt];reqRows()});
- hoverArea(vals,labs);hoverDonut(ent,t.documents);rows();reqRows();$("#rf").textContent=flt==="all"?"":"· "+ST[flt];
+ hoverArea(vals,labs);hoverDonut(ent,t.documents);rows();reqRows();bellInit();$("#rf").textContent=flt==="all"?"":"· "+ST[flt];
 }
 
 function rows(){
- const k=q.toLowerCase(),l=users.filter(u=>u.name.toLowerCase().includes(k));
+ const k=q.toLowerCase(),l=users.filter(u=>(u.name+" "+u.full+" "+u.phone+" "+u.line).toLowerCase().includes(k));
  $("#cnt").textContent=l.length+" shown";
- $("#tb").innerHTML=l.map(u=>{const[c,tx]=st(u);return`<tr><td>${esc(u.name)}</td><td>${u.lang}</td><td>${u.docs}</td><td>${fmtDue(u.nextDue)}</td><td>${u.active===0?"today":u.active+" d ago"}</td><td><span class="pill ${c}">${tx}</span></td><td><button class="btn" data-id="${u.id}">${u.off?"Restore":"Suspend"}</button></td></tr>`}).join("");
- document.querySelectorAll("#tb button").forEach(b=>b.onclick=async()=>{const u=users.find(x=>x.id===b.dataset.id);await sb.from("profiles").update({suspended:!u.off}).eq("id",u.id);showDash()});
+ $("#tb").innerHTML=l.map(u=>{const[c,tx]=st(u);return`<tr><td><button class="lnk" data-u="${u.id}">${esc(u.full||u.name)}</button>${u.full?`<div class="mute">${esc(u.name)}</div>`:""}</td><td>${u.lang}</td><td>${u.docs}</td><td>${fmtDue(u.nextDue)}</td><td>${u.active===0?"today":u.active+" d ago"}</td><td><span class="pill ${c}">${tx}</span></td><td><button class="btn" data-id="${u.id}">${u.off?"Restore":"Suspend"}</button></td></tr>`}).join("");
+ document.querySelectorAll("#tb [data-u]").forEach(b=>b.onclick=()=>openUser(b.dataset.u));document.querySelectorAll("#tb button[data-id]").forEach(b=>b.onclick=async()=>{const u=users.find(x=>x.id===b.dataset.id);await sb.from("profiles").update({suspended:!u.off}).eq("id",u.id);showDash()});
 }
 gate();
 </script>

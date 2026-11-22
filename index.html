@@ -75,16 +75,17 @@ input[type=text],input[type=password],input[type=date],select,textarea{width:100
 pre.pay{white-space:pre-wrap;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;font:inherit;margin:6px 0}
 .qr{display:block;width:min(260px,100%);margin:8px auto;border-radius:14px;border:1px solid var(--line);background:#fff}
 @media (prefers-reduced-motion:no-preference){.hero,.item{animation:in .45s ease-out both}@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.g-fg{transition:stroke-dasharray 1s cubic-bezier(.2,.8,.2,1)}}
+.hdr-r{display:flex;gap:8px;align-items:center}.btn.ic{padding:0;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--card)}
 </style>
 </head>
 <body>
 <main>
   <header>
     <div><h1 id="t-title"></h1><p class="sub" id="t-sub"></p></div>
-    <div class="seg" role="group" aria-label="Language">
+    <div class="hdr-r"><button class="btn ic" id="open-prof" aria-label="Profile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></button><div class="seg" role="group" aria-label="Language">
       <button id="l-my" aria-pressed="false">မြန်မာ</button>
       <button id="l-en" aria-pressed="true">EN</button>
-    </div>
+    </div></div>
   </header>
   <div id="next"></div>
   <div class="chips" id="chips" role="group"></div>
@@ -117,6 +118,20 @@ pre.pay{white-space:pre-wrap;background:var(--card);border:1px solid var(--line)
   <p class="hint" id="a-hint"></p>
   <p class="hint" id="a-msg" role="alert" style="color:var(--late)"></p>
   <div class="sheet-actions"><button class="btn" id="a-lang"></button><button class="btn" id="a-up"></button><button class="btn pri" id="a-in"></button></div>
+</dialog>
+<dialog id="pdlg">
+  <h2 id="pf-title" style="margin:0 0 4px;font-size:1.15rem"></h2>
+  <p class="hint" id="pf-opt"></p>
+  <label for="pf-name" id="lb-pf-name"></label><input type="text" id="pf-name" autocomplete="name">
+  <label for="pf-phone" id="lb-pf-phone"></label><input type="text" id="pf-phone" inputmode="tel" autocomplete="tel">
+  <label for="pf-addr" id="lb-pf-addr"></label><textarea id="pf-addr" rows="2"></textarea>
+  <label for="pf-line" id="lb-pf-line"></label><input type="text" id="pf-line" autocomplete="off">
+  <label for="pf-email" id="lb-pf-email"></label><input type="text" id="pf-email" inputmode="email" autocomplete="email">
+  <label for="pf-dob" id="lb-pf-dob"></label><input type="date" id="pf-dob">
+  <label for="pf-emp" id="lb-pf-emp"></label><input type="text" id="pf-emp">
+  <label for="pf-pref" id="lb-pf-pref"></label><select id="pf-pref"><option value="">-</option><option>LINE</option><option>Phone</option><option>Telegram</option><option>Viber</option><option>Email</option></select>
+  <p class="hint" id="pf-msg" role="status"></p>
+  <div class="sheet-actions"><button class="btn" id="pf-x"></button><button class="btn pri" id="pf-save"></button></div>
 </dialog>
 <dialog id="rdlg">
   <h2 id="r-title" style="margin:0 0 8px;font-size:1.1rem"></h2>
@@ -166,6 +181,8 @@ Object.assign(T.en,{login:"Sign in",signup:"Sign up",email:"Phone number or emai
 Object.assign(T.my,{login:"ဝင်မည်",signup:"အကောင့်ဖွင့်မည်",email:"ဖုန်းနံပါတ် သို့မဟုတ် အီးမေးလ်",pw:"စကားဝှက် (၈ လုံးနှင့်အထက်)",logout:"ထွက်မည်",err2:"သိမ်း၍မရပါ။",pwErr:"ဖုန်းနံပါတ် (သို့) အီးမေးလ် မှန်ကန်စွာ ထည့်ပြီး စကားဝှက် ၈ လုံးနှင့်အထက် ထည့်ပါ။",confirm:"အီးမေးလ်ကို စစ်ပြီး အကောင့်ကို အတည်ပြုပါ၊ ထို့နောက် ဝင်ပါ။",lng:"English",hint:"ဥပမာ - 0812345678 (ထိုင်းနံပါတ်) သို့မဟုတ် +959xxxxxxxxx (မြန်မာနံပါတ်)"});
 Object.assign(T.en,{rq:"Request renewal",rqTitle:"Renewal request",rqNote:"Message to admin (optional)",rqSend:"Send request",st:{requested:"Waiting for price",quoted:"Payment needed",payment_submitted:"Checking payment",confirmed:"Payment confirmed",in_progress:"In progress",done:"Done",cancelled:"Cancelled"},rqPrice:"Price",rqBaht:"THB",rqPay:"How to pay",rqSlip:"Upload your payment slip",rqSlipPick:"Choose slip photo",rqSlipSend:"Send slip",rqCancel:"Cancel request",rqAdmin:"Admin note",rqWait1:"The admin is preparing a price. Please wait.",rqWait2:"Payment received. The admin is checking it.",rqWait3:"Payment confirmed. The admin will start soon.",rqWait4:"The admin is processing your request.",rqNoSlip:"Choose the slip photo first.",rqQrHint:"Scan this QR in your banking app, or save the picture and open it from your gallery. Pay exactly the price shown.",tOk:"On track",tSoon:"Due soon",tLate:"Overdue",rqChecking:"Checking your payment...",rqAuto:"Payment verified automatically ✔",rqManual:"Slip sent. The admin will check it soon."});
 Object.assign(T.my,{rq:"သက်တမ်းတိုးရန် တောင်းဆိုမည်",rqTitle:"သက်တမ်းတိုး တောင်းဆိုမှု",rqNote:"Admin သို့ မက်ဆေ့ချ် (မဖြည့်လည်းရ)",rqSend:"တောင်းဆိုမှု ပို့မည်",st:{requested:"ဈေးနှုန်း စောင့်နေသည်",quoted:"ငွေပေးချေရန်",payment_submitted:"ငွေပေးချေမှု စစ်နေသည်",confirmed:"ငွေလက်ခံပြီး",in_progress:"ဆောင်ရွက်နေသည်",done:"ပြီးပါပြီ",cancelled:"ပယ်ဖျက်ပြီး"},rqPrice:"ကျသင့်ငွေ",rqBaht:"ဘတ်",rqPay:"ငွေပေးချေရန် အချက်အလက်",rqSlip:"ငွေလွှဲပြေစာ ဓာတ်ပုံ တင်ပါ",rqSlipPick:"ပြေစာဓာတ်ပုံ ရွေးမည်",rqSlipSend:"ပြေစာ ပို့မည်",rqCancel:"တောင်းဆိုမှု ပယ်ဖျက်မည်",rqAdmin:"Admin မှတ်ချက်",rqWait1:"Admin က ဈေးနှုန်း ပြင်ဆင်နေပါသည်။ ခဏစောင့်ပါ။",rqWait2:"ငွေပေးချေမှု လက်ခံရရှိပြီး Admin စစ်ဆေးနေပါသည်။",rqWait3:"ငွေလက်ခံပြီးပါပြီ။ Admin မကြာမီ စတင်ပါမည်။",rqWait4:"Admin က သင့်တောင်းဆိုမှုကို ဆောင်ရွက်နေပါသည်။",rqNoSlip:"ပြေစာဓာတ်ပုံ အရင်ရွေးပါ။",rqQrHint:"ဤ QR ကို ဘဏ်အက်ပ်ဖြင့် စကန်ဖတ်ပါ၊ ဒါမှမဟုတ် ပုံကိုသိမ်းပြီး ဘဏ်အက်ပ်ထဲက ရွေးပါ။ ပြထားသော ကျသင့်ငွေ အတိအကျ ပေးပါ။",tOk:"ပုံမှန်",tSoon:"နီးပါပြီ",tLate:"ကျော်လွန်",rqChecking:"ငွေပေးချေမှု စစ်ဆေးနေသည်...",rqAuto:"ငွေပေးချေမှု အလိုအလျောက် အတည်ပြုပြီးပါပြီ ✔",rqManual:"ပြေစာ ပို့ပြီးပါပြီ။ Admin မကြာမီ စစ်ဆေးပါမည်။"});
+Object.assign(T.en,{pf:"My profile",pfOpt:"Everything here is optional. We only use it to contact you about your renewals.",pfName:"Full name",pfPhone:"Phone number",pfAddr:"Address in Thailand",pfLine:"LINE ID",pfEmail:"Email",pfDob:"Date of birth",pfEmp:"Employer or workplace",pfPref:"Preferred way to contact you",pfSaved:"Saved ✔"});
+Object.assign(T.my,{pf:"ကိုယ်ရေးအချက်အလက်",pfOpt:"ဒီမှာ အားလုံး မဖြည့်လည်းရပါတယ်။ သင့်သက်တမ်းတိုးကိစ္စအတွက် ဆက်သွယ်ရန်သာ သုံးပါမည်။",pfName:"အမည်အပြည့်အစုံ",pfPhone:"ဖုန်းနံပါတ်",pfAddr:"ထိုင်းနိုင်ငံရှိ လိပ်စာ",pfLine:"LINE ID",pfEmail:"အီးမေးလ်",pfDob:"မွေးသက္ကရာဇ်",pfEmp:"အလုပ်ရှင် သို့မဟုတ် အလုပ်ခွင်",pfPref:"ဆက်သွယ်စေလိုသည့်နည်း",pfSaved:"သိမ်းပြီးပါပြီ ✔"});
 const ORDER=["r90","visa","passport","license","permit","other"];
 let S={lang:"en",filter:"all",items:[],set:{browser:false,line:false,lineid:"",tg:false}},editId=null,photo=null;
 const $=id=>document.getElementById(id);
@@ -280,6 +297,7 @@ function authLabels(){const L=t();$("a-title").textContent=L.login;$("a-in").tex
 function showAuth(){authLabels();if(!$("adlg").open)$("adlg").showModal()}
 async function start(){const{data}=await sb.auth.getSession();if(!data.session){render();return showAuth()}
  U=data.session.user;sb.from("profiles").update({name:disp(U.email),lang:S.lang==="my"?"my":"en",last_active:new Date().toISOString()}).eq("id",U.id).then(()=>{});
+ {const pr=await sb.from("profiles").select("*").eq("id",U.id).maybeSingle();S.prof=pr.data||{}}
  await loadDocs();render();notifyDue()}
 function toEmail(v){v=v.trim();if(v.includes("@"))return v.toLowerCase();let d=v.replace(/\D/g,"");if(!d)return"";if(!v.startsWith("+")){if(d.startsWith("00"))d=d.slice(2);else if(d.startsWith("0"))d="66"+d.slice(1)}return d.length>=9&&d.length<=15?"p"+d+"@ulwinmoeoo.github.io":""}
 function disp(e){const m=/^p(\d+)@ulwinmoeoo\.github\.io$/.exec(e||"");return m?"+"+m[1]:e}
@@ -331,6 +349,18 @@ function openReq(docId){
  $("rdlg").showModal();
 }
 
+function openProf(){
+ const L=t(),p=S.prof||{},ph=U&&/^\+/.test(disp(U.email))?disp(U.email):"";
+ $("pf-title").textContent=L.pf;$("pf-opt").textContent=L.pfOpt;
+ [["name","pfName"],["phone","pfPhone"],["addr","pfAddr"],["line","pfLine"],["email","pfEmail"],["dob","pfDob"],["emp","pfEmp"],["pref","pfPref"]].forEach(([k,n])=>{$("lb-pf-"+k).textContent=L[n]});
+ $("pf-name").value=p.full_name||"";$("pf-phone").value=p.phone||ph;$("pf-addr").value=p.address||"";$("pf-line").value=p.line_id||"";$("pf-email").value=p.email||"";$("pf-dob").value=p.dob||"";$("pf-emp").value=p.employer||"";$("pf-pref").value=p.contact_pref||"";
+ $("pf-x").textContent=L.cancel;$("pf-save").textContent=L.save;$("pf-msg").textContent="";$("pdlg").showModal()}
+$("open-prof").onclick=openProf;$("pf-x").onclick=()=>$("pdlg").close();
+$("pf-save").onclick=async()=>{const g=i=>$(i).value.trim()||null;
+ const o={full_name:g("pf-name"),phone:g("pf-phone"),address:g("pf-addr"),line_id:g("pf-line"),email:g("pf-email"),dob:$("pf-dob").value||null,employer:g("pf-emp"),contact_pref:$("pf-pref").value||null};
+ const r=await sb.from("profiles").update(o).eq("id",U.id).select().maybeSingle();
+ if(r.error){$("pf-msg").textContent=t().err2+" "+r.error.message;return}
+ S.prof=r.data||Object.assign(S.prof||{},o);$("pf-msg").textContent=t().pfSaved;setTimeout(()=>$("pdlg").close(),700)};
 load();S.items=[];render();start();
 </script>
 </body>
